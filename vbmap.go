@@ -18,23 +18,43 @@ type vbmap map[string][]uint16
 const commonSuffix = ".advertising.aol.com:11210"
 
 func getVbMaps(bucket couchbase.Bucket) map[string]vbmap {
-	rv := map[string]vbmap{}
+
+	type gathered struct {
+		sn  string
+		vbm vbmap
+	}
+
+	// Go grab all the things at once.
+	ch := make(chan gathered)
 	for _, serverName := range bucket.VBucketServerMap.ServerList {
 		sn := cleanupHost(serverName)
-		rv[sn] = make(map[string][]uint16)
-		conn, err := memcached.Connect("tcp", serverName)
-		if err != nil {
-			log.Printf("Error getting stats from %v: %v",
-				serverName, err)
-		} else {
-			defer conn.Close()
-			for _, statval := range conn.Stats("vbucket") {
-				vb, err := strconv.ParseInt(statval.Key[3:], 10, 16)
-				if err != nil {
-					log.Fatalf("Error parsing vbucket:  %#v: %v", statval, err)
+		go func() {
+			results := make(map[string][]uint16)
+			conn, err := memcached.Connect("tcp", serverName)
+			if err != nil {
+				log.Printf("Error getting stats from %v: %v",
+					serverName, err)
+				ch <- gathered{sn, results}
+			} else {
+				defer conn.Close()
+				for _, statval := range conn.Stats("vbucket") {
+					vb, err := strconv.ParseInt(statval.Key[3:], 10, 16)
+					if err != nil {
+						log.Fatalf("Error parsing vbucket:  %#v: %v", statval, err)
+					}
+					results[statval.Val] = append(results[statval.Val], uint16(vb))
 				}
-				rv[sn][statval.Val] = append(rv[sn][statval.Val], uint16(vb))
+				ch <- gathered{sn, results}
 			}
+		}()
+	}
+
+	// Gather the results
+	rv := map[string]vbmap{}
+	for i := 0; i < len(bucket.VBucketServerMap.ServerList); i++ {
+		g := <-ch
+		if len(g.vbm) > 0 {
+			rv[g.sn] = g.vbm
 		}
 	}
 	return rv
