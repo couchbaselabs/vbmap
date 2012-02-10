@@ -31,36 +31,40 @@ func verify(vb map[string]vbmap) {
 	}
 }
 
-func getVbMaps(bucket couchbase.Bucket) map[string]vbmap {
+type gathered struct {
+	sn  string
+	vbm vbmap
+}
 
-	type gathered struct {
-		sn  string
-		vbm vbmap
+// Get an individual servers vbucket data and put the result in the given channel
+func getVBucketData(addr string, ch chan<- gathered) {
+	sn := cleanupHost(addr)
+	results := make(map[string][]uint16)
+	conn, err := memcached.Connect("tcp", addr)
+	if err != nil {
+		log.Printf("Error getting stats from %v: %v", addr, err)
+		ch <- gathered{sn, results}
+	} else {
+		defer conn.Close()
+		for _, statval := range conn.Stats("vbucket") {
+			vb, err := strconv.ParseInt(statval.Key[3:], 10, 16)
+			if err != nil {
+				log.Fatalf("Error parsing vbucket:  %#v: %v",
+					statval, err)
+			}
+			results[statval.Val] = append(results[statval.Val],
+				uint16(vb))
+		}
+		ch <- gathered{sn, results}
 	}
+}
+
+func getVbMaps(bucket couchbase.Bucket) map[string]vbmap {
 
 	// Go grab all the things at once.
 	ch := make(chan gathered)
 	for _, serverName := range bucket.VBucketServerMap.ServerList {
-		go func(s string) {
-			sn := cleanupHost(s)
-			results := make(map[string][]uint16)
-			conn, err := memcached.Connect("tcp", s)
-			if err != nil {
-				log.Printf("Error getting stats from %v: %v",
-					s, err)
-				ch <- gathered{sn, results}
-			} else {
-				defer conn.Close()
-				for _, statval := range conn.Stats("vbucket") {
-					vb, err := strconv.ParseInt(statval.Key[3:], 10, 16)
-					if err != nil {
-						log.Fatalf("Error parsing vbucket:  %#v: %v", statval, err)
-					}
-					results[statval.Val] = append(results[statval.Val], uint16(vb))
-				}
-				ch <- gathered{sn, results}
-			}
-		}(serverName)
+		go getVBucketData(serverName, ch)
 	}
 
 	// Gather the results
