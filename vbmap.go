@@ -15,7 +15,7 @@ import (
 
 type vbmap map[string][]uint16
 
-const commonSuffix = ".advertising.aol.com:11210"
+var commonSuffix = ""
 
 func verify(vb map[string]vbmap) {
 	accounted := make([]bool, 1024)
@@ -83,6 +83,24 @@ func cleanupHost(h string) string {
 	return h
 }
 
+func computeCommonSuffix(from []string) string {
+	rv := ""
+	for i := len(from[0]); i > 0; i-- {
+		common := true
+		suffix := from[0][i:]
+		for _, s := range from {
+			if !strings.HasSuffix(s, suffix) {
+				common = false
+				break
+			}
+		}
+		if common {
+			rv = suffix
+		}
+	}
+	return rv
+}
+
 func getServerStates(bucket couchbase.Bucket) map[string]string {
 	rv := make(map[string]string)
 	for _, node := range bucket.Nodes {
@@ -107,6 +125,8 @@ func getBucket() couchbase.Bucket {
 	if err != nil {
 		log.Fatalf("Error getting bucket:  %v", err)
 	}
+
+	commonSuffix = computeCommonSuffix(bucket.VBucketServerMap.ServerList)
 
 	return bucket
 }
