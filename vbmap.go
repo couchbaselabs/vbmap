@@ -17,6 +17,20 @@ type vbmap map[string][]uint16
 
 const commonSuffix = ".advertising.aol.com:11210"
 
+func verify(vb map[string]vbmap) {
+	accounted := make([]bool, 1024)
+	for _, vbm := range vb {
+		for _, vbid := range vbm["active"] {
+			accounted[vbid] = true
+		}
+	}
+	for vbid, isAccounted := range accounted {
+		if !isAccounted {
+			log.Printf("VB not accounted for:  %v", vbid)
+		}
+	}
+}
+
 func getVbMaps(bucket couchbase.Bucket) map[string]vbmap {
 
 	type gathered struct {
@@ -57,6 +71,8 @@ func getVbMaps(bucket couchbase.Bucket) map[string]vbmap {
 			rv[g.sn] = g.vbm
 		}
 	}
+
+	verify(rv)
 	return rv
 }
 
