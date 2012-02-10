@@ -27,13 +27,13 @@ func getVbMaps(bucket couchbase.Bucket) map[string]vbmap {
 	// Go grab all the things at once.
 	ch := make(chan gathered)
 	for _, serverName := range bucket.VBucketServerMap.ServerList {
-		sn := cleanupHost(serverName)
-		go func() {
+		go func(s string) {
+			sn := cleanupHost(s)
 			results := make(map[string][]uint16)
-			conn, err := memcached.Connect("tcp", serverName)
+			conn, err := memcached.Connect("tcp", s)
 			if err != nil {
 				log.Printf("Error getting stats from %v: %v",
-					serverName, err)
+					s, err)
 				ch <- gathered{sn, results}
 			} else {
 				defer conn.Close()
@@ -46,7 +46,7 @@ func getVbMaps(bucket couchbase.Bucket) map[string]vbmap {
 				}
 				ch <- gathered{sn, results}
 			}
-		}()
+		}(serverName)
 	}
 
 	// Gather the results
