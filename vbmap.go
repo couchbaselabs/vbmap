@@ -7,7 +7,6 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/couchbaselabs/go-couchbase"
 	"github.com/dustin/gomemcached/client"
@@ -38,7 +37,7 @@ type gathered struct {
 
 // Get an individual servers vbucket data and put the result in the given channel
 func getVBucketData(addr string, ch chan<- gathered) {
-	sn := cleanupHost(addr)
+	sn := couchbase.CleanupHost(addr, commonSuffix)
 	results := make(map[string][]uint16)
 	conn, err := memcached.Connect("tcp", addr)
 	if err != nil {
@@ -80,35 +79,10 @@ func getVbMaps(bucket couchbase.Bucket) map[string]vbmap {
 	return rv
 }
 
-func cleanupHost(h string) string {
-	if strings.HasSuffix(h, commonSuffix) {
-		return h[:len(h)-len(commonSuffix)]
-	}
-	return h
-}
-
-func computeCommonSuffix(from []string) string {
-	rv := ""
-	for i := len(from[0]); i > 0; i-- {
-		common := true
-		suffix := from[0][i:]
-		for _, s := range from {
-			if !strings.HasSuffix(s, suffix) {
-				common = false
-				break
-			}
-		}
-		if common {
-			rv = suffix
-		}
-	}
-	return rv
-}
-
 func getServerStates(bucket couchbase.Bucket) map[string]string {
 	rv := make(map[string]string)
 	for _, node := range bucket.Nodes {
-		rv[cleanupHost(node.Hostname)] = node.Status
+		rv[couchbase.CleanupHost(node.Hostname, commonSuffix)] = node.Status
 	}
 	return rv
 }
@@ -130,7 +104,7 @@ func getBucket() couchbase.Bucket {
 		log.Fatalf("Error getting bucket:  %v", err)
 	}
 
-	commonSuffix = computeCommonSuffix(bucket.VBucketServerMap.ServerList)
+	commonSuffix = bucket.CommonAddressSuffix()
 
 	return bucket
 }
