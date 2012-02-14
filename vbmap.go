@@ -35,6 +35,12 @@ type gathered struct {
 	vbm vbmap
 }
 
+func maybefatal(err error, f string, args ...interface{}) {
+	if err != nil {
+		log.Fatalf(f, args...)
+	}
+}
+
 // Get an individual servers vbucket data and put the result in the given channel
 func getVBucketData(addr string, ch chan<- gathered) {
 	sn := couchbase.CleanupHost(addr, commonSuffix)
@@ -47,10 +53,8 @@ func getVBucketData(addr string, ch chan<- gathered) {
 		defer conn.Close()
 		for _, statval := range conn.Stats("vbucket") {
 			vb, err := strconv.ParseInt(statval.Key[3:], 10, 16)
-			if err != nil {
-				log.Fatalf("Error parsing vbucket:  %#v: %v",
-					statval, err)
-			}
+			maybefatal(err, "Error parsing vbucket:  %#v: %v",
+				statval, err)
 			results[statval.Val] = append(results[statval.Val],
 				uint16(vb))
 		}
@@ -90,19 +94,13 @@ func getServerStates(bucket couchbase.Bucket) map[string]string {
 func getBucket() couchbase.Bucket {
 	var err error
 	client, err := couchbase.Connect(flag.Arg(0))
-	if err != nil {
-		log.Fatalf("Error connecting:  %v", err)
-	}
+	maybefatal(err, "Error connecting:  %v", err)
 
 	pool, err := client.GetPool("default")
-	if err != nil {
-		log.Fatalf("Error getting pool:  %v", err)
-	}
+	maybefatal(err, "Error getting pool:  %v", err)
 
 	bucket, err := pool.GetBucket("default")
-	if err != nil {
-		log.Fatalf("Error getting bucket:  %v", err)
-	}
+	maybefatal(err, "Error getting bucket:  %v", err)
 
 	commonSuffix = bucket.CommonAddressSuffix()
 
