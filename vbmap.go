@@ -62,7 +62,7 @@ func getVBucketData(addr string, ch chan<- gathered) {
 	}
 }
 
-func getVbMaps(bucket couchbase.Bucket) map[string]vbmap {
+func getVbMaps(bucket *couchbase.Bucket) map[string]vbmap {
 
 	// Go grab all the things at once.
 	ch := make(chan gathered)
@@ -83,7 +83,7 @@ func getVbMaps(bucket couchbase.Bucket) map[string]vbmap {
 	return rv
 }
 
-func getServerStates(bucket couchbase.Bucket) map[string]string {
+func getServerStates(bucket *couchbase.Bucket) map[string]string {
 	rv := make(map[string]string)
 	for _, node := range bucket.Nodes {
 		rv[couchbase.CleanupHost(node.Hostname, commonSuffix)] = node.Status
@@ -91,7 +91,7 @@ func getServerStates(bucket couchbase.Bucket) map[string]string {
 	return rv
 }
 
-func getBucket() couchbase.Bucket {
+func getBucket() *couchbase.Bucket {
 	bucket, err := couchbase.GetBucket(flag.Arg(0), "default", "default")
 	maybefatal(err, "Error getting bucket:  %v", err)
 
