@@ -92,14 +92,7 @@ func getServerStates(bucket couchbase.Bucket) map[string]string {
 }
 
 func getBucket() couchbase.Bucket {
-	var err error
-	client, err := couchbase.Connect(flag.Arg(0))
-	maybefatal(err, "Error connecting:  %v", err)
-
-	pool, err := client.GetPool("default")
-	maybefatal(err, "Error getting pool:  %v", err)
-
-	bucket, err := pool.GetBucket("default")
+	bucket, err := couchbase.GetBucket(flag.Arg(0), "default", "default")
 	maybefatal(err, "Error getting bucket:  %v", err)
 
 	commonSuffix = bucket.CommonAddressSuffix()
