@@ -9,7 +9,6 @@ import (
 	"strconv"
 
 	"github.com/couchbaselabs/go-couchbase"
-	"github.com/dustin/gomemcached/client"
 )
 
 type vbmap map[string][]uint16
@@ -30,56 +29,28 @@ func verify(vb map[string]vbmap) {
 	}
 }
 
-type gathered struct {
-	sn  string
-	vbm vbmap
-}
-
 func maybefatal(err error, f string, args ...interface{}) {
 	if err != nil {
 		log.Fatalf(f, args...)
 	}
 }
 
-// Get an individual servers vbucket data and put the result in the given channel
-func getVBucketData(addr string, ch chan<- gathered) {
-	sn := couchbase.CleanupHost(addr, commonSuffix)
-	results := make(map[string][]uint16)
-	conn, err := memcached.Connect("tcp", addr)
-	if err != nil {
-		log.Printf("Error getting stats from %v: %v", addr, err)
-		ch <- gathered{sn, results}
-	} else {
-		defer conn.Close()
-		for _, statval := range conn.Stats("vbucket") {
-			vb, err := strconv.ParseInt(statval.Key[3:], 10, 16)
-			maybefatal(err, "Error parsing vbucket:  %#v: %v",
-				statval, err)
-			results[statval.Val] = append(results[statval.Val],
-				uint16(vb))
-		}
-		ch <- gathered{sn, results}
-	}
-}
-
 func getVbMaps(bucket *couchbase.Bucket) map[string]vbmap {
 
-	// Go grab all the things at once.
-	ch := make(chan gathered)
-	for _, serverName := range bucket.VBucketServerMap.ServerList {
-		go getVBucketData(serverName, ch)
-	}
+	allstats := bucket.GetStats("vbucket")
 
-	// Gather the results
 	rv := map[string]vbmap{}
-	for i := 0; i < len(bucket.VBucketServerMap.ServerList); i++ {
-		g := <-ch
-		if len(g.vbm) > 0 {
-			rv[g.sn] = g.vbm
+	for fullname, m := range allstats {
+		sn := couchbase.CleanupHost(fullname, commonSuffix)
+		rv[sn] = vbmap{}
+
+		for k, v := range m {
+			vb, err := strconv.ParseInt(k[3:], 10, 16)
+			maybefatal(err, "Error parsing vbucket:  %v/%v: %v",
+				k, v, err)
+			rv[sn][v] = append(rv[sn][v], uint16(vb))
 		}
 	}
-
-	verify(rv)
 	return rv
 }
 
@@ -104,6 +75,7 @@ func mapHandler(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-type", "application/javascript")
 
 	bucket := getBucket()
+	defer bucket.Close()
 
 	fmt.Fprintf(w, "var vbmap = ")
 	json.NewEncoder(w).Encode(getVbMaps(bucket))
