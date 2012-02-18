@@ -15,20 +15,6 @@ type vbmap map[string][]uint16
 
 var commonSuffix = ""
 
-func verify(vb map[string]vbmap) {
-	accounted := make([]bool, 1024)
-	for _, vbm := range vb {
-		for _, vbid := range vbm["active"] {
-			accounted[vbid] = true
-		}
-	}
-	for vbid, isAccounted := range accounted {
-		if !isAccounted {
-			log.Printf("VB not accounted for:  %v", vbid)
-		}
-	}
-}
-
 func maybefatal(err error, f string, args ...interface{}) {
 	if err != nil {
 		log.Fatalf(f, args...)
