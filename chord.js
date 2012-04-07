@@ -30,6 +30,8 @@ function reload() {
 var vbm = getBucketMapping();
 var vbmatrix = buildMatrix(vbm.serverList, vbm.vBucketMap);
 
+vbmatrix = reload();
+
 var chord = d3.layout.chord()
   .padding(.05)
   .sortSubgroups(d3.descending)
@@ -131,9 +133,14 @@ var tooltip = svg.append("text")
 
 /** Returns an array of tick angles and labels, given a group. */
 function groupTicks(d, i) {
+  var vbin = 0, vbout = 0;
+  for (var j = 0; j < vbm.serverList.length; j++) {
+      vbout += vbmatrix[i][j];
+      vbin += vbmatrix[j][i];
+  }
   return [{
       angle: d.startAngle + ((d.endAngle - d.startAngle) / 2.0),
-      label: vbm.serverList[i]
+      label: vbm.serverList[i] + " (a:" + vbout + ", r:" + vbin + ")"
   }];
 }
 
