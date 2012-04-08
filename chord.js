@@ -83,7 +83,7 @@ function makeChord(w, h, vbm, container, fill) {
       .style("opacity", 1)
       .on("mouseover", function(d, i) {
           tooltip.attr("visibility", "visible");
-          tooltip.text(d.source.value + " ⟷ " + d.target.value);
+          tooltip.text(d.source.value + " \u27f7 " + d.target.value);
           svg.selectAll("g.chord path")
                   .filter(function(di) {
                       return di.source != d.source && di.target != d.target;
