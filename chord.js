@@ -30,10 +30,50 @@ function reload() {
 function makeChord(w, h, vbm, container, fill) {
     var vbmatrix = buildMatrix(vbm.serverList, vbm.vBucketMap);
 
+    var padding = 0.05;
+
     var chord = d3.layout.chord()
-        .padding(.05)
+        .padding(padding)
         .sortSubgroups(d3.descending)
         .matrix(vbmatrix);
+
+    var groups = chord.groups();
+    var arcs = chord.chords();
+    var arcLength = ((2.0 * Math.PI) - (groups.length * padding)) / groups.length;
+    var start = 0;
+    var positions = [],
+        sizeFactors = [];
+
+    for (var i = 0; i < groups.length; i++) {
+        var origWidth = groups[i].endAngle - groups[i].startAngle;
+        positions.push(start);
+        groups[i].startAngle = start;
+        groups[i].endAngle = start + arcLength;
+        var newWidth = groups[i].endAngle - groups[i].startAngle;
+        sizeFactors.push(newWidth / origWidth);
+        start = start + arcLength + padding;
+    }
+
+    var allChordSegs = [];
+    for (var i = 0; i < arcs.length; i++) {
+        allChordSegs.push(arcs[i].source);
+        allChordSegs.push(arcs[i].target);
+    }
+
+    allChordSegs.sort(function(a, b) {
+        return a.startAngle - b.startAngle;
+    });
+
+    for (var i = 0; i < allChordSegs.length; i++) {
+        var seg = allChordSegs[i];
+        var width = seg.endAngle - seg.startAngle;
+        if (sizeFactors[seg.index] < 1.0) {
+            width = width * sizeFactors[seg.index];
+        }
+        seg.startAngle = positions[seg.index];
+        seg.endAngle = seg.startAngle + width;
+        positions[seg.index] = seg.endAngle;
+    }
 
     var r0 = Math.min(w, h) * .41,
         r1 = r0 * 1.1;
