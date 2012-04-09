@@ -193,4 +193,8 @@ var fill = d3.scale.ordinal()
     .domain(d3.range(4))
     .range(brews11_2);
 
+fill = function() {
+    return "grey";
+};
+
 var chord = makeChord(800, 800, getBucketMapping(), '#chart', fill);
