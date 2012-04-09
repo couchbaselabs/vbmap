@@ -30,7 +30,7 @@ function reload() {
 function makeChord(w, h, vbm, container, fill) {
     var vbmatrix = buildMatrix(vbm.serverList, vbm.vBucketMap);
 
-    var padding = 0.05;
+    var padding = 0;
 
     var chord = d3.layout.chord()
         .padding(padding)
@@ -89,8 +89,8 @@ function makeChord(w, h, vbm, container, fill) {
     .selectAll("path")
       .data(chord.groups)
     .enter().append("path")
-      .style("fill", function(d) { return fill(d.index); })
-      .style("stroke", function(d) { return fill(d.index); })
+      .style("fill", fill)
+      .style("stroke", "black")
       .attr("class", "node")
       .attr("d", d3.svg.arc().innerRadius(r0).outerRadius(r1))
       .on("mouseover", fade(.1))
@@ -118,7 +118,7 @@ function makeChord(w, h, vbm, container, fill) {
     .selectAll("path")
       .data(chord.chords)
     .enter().append("path")
-      .style("fill", function(d) { return fill(d.target.index); })
+      .style("fill", fill)
       .attr("d", d3.svg.chord().radius(r0))
       .style("opacity", 1)
       .on("mouseover", function(d, i) {
@@ -177,24 +177,4 @@ function makeChord(w, h, vbm, container, fill) {
   }
 }
 
-var brews11 = ['#A6CEE3', '#1F78B4', '#B2DF8A', '#33A02C',
-               '#FB9A99', '#E31A1C', '#FDBF6F', '#FF7F00',
-               '#CAB2D6', '#6A3D9A', '#FFFF99'];
-
-var brews11_2 = ['#8DD3C7', '#FFFFB3', '#BEBADA', '#FB8072',
-                 '#80B1D3', '#FDB462', '#B3DE69', '#FCCDE5',
-                 '#D9D9D9', '#BC80BD', '#CCEBC5'];
-
-var brews12 = ['#8DD3C7', '#FFFFB3', '#BEBADA', '#FB8072',
-               '#80B1D3', '#FDB462', '#B3DE69', '#FCCDE5',
-               '#D9D9D9', '#BC80BD', '#CCEBC5', '#FFED6F'];
-
-var fill = d3.scale.ordinal()
-    .domain(d3.range(4))
-    .range(brews11_2);
-
-fill = function() {
-    return "grey";
-};
-
-var chord = makeChord(800, 800, getBucketMapping(), '#chart', fill);
+var chord = makeChord(800, 800, getBucketMapping(), '#chart', 'grey');
