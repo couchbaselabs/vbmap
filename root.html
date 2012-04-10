@@ -33,7 +33,16 @@
 <script type="text/javascript">
  drawState(700, 700, server_state, '#cluster');
  makeChord(700, 700, server_state, '#replicas', 'grey');
- setTimeout(function() { location.reload(false); }, 10000);
+ setInterval(function() {
+   d3.json("/map", function(json) {
+   if (json != null) {
+     d3.select("#cluster svg").remove();
+     drawState(700, 700, json, '#cluster');
+     d3.select("#replicas svg").remove();
+     makeChord(700, 700, json, '#replicas', 'grey');
+   }
+ });
+ }, 5000);
     </script>
   </body>
 </html>
