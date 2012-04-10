@@ -8,7 +8,10 @@
   </head>
   <body>
     <div id="chart"></div>
-    <script type="text/javascript" src="map.json"></script>
+    <script type="text/javascript" src="map-static.json"></script>
     <script type="text/javascript" src="chord.js"></script>
+    <script type="text/javascript">
+      makeChord(800, 800, getBucketMapping(), '#chart', 'grey');
+    </script>
   </body>
 </html>

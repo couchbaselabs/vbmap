@@ -1,5 +1,5 @@
 function getBucketMapping() {
-  return bucketResponse.vBucketServerMap;
+    return repmap;
 }
 
 function buildMatrix(servers, mapping) {
@@ -11,24 +11,15 @@ function buildMatrix(servers, mapping) {
         }
     }
     for (var i = 0; i < mapping.length; i++) {
-        m[mapping[i][0]][mapping[i][1]]++;
+        if (mapping[i][1] >= 0) {
+            m[mapping[i][0]][mapping[i][1]]++;
+        }
     }
     return m;
 }
 
-function reload() {
-    var vbm = getBucketMapping();
-    var m = buildMatrix(vbm.serverList, vbm.vBucketMap);
-    m[0][1] = 5;
-    m[0][2] = 3;
-    m[0][3] = 2;
-    m[0][4] = 2;
-    m[2][0] = 12;
-    return m;
-}
-
 function makeChord(w, h, vbm, container, fill) {
-    var vbmatrix = buildMatrix(vbm.serverList, vbm.vBucketMap);
+    var vbmatrix = buildMatrix(server_list, repmap);
 
     var padding = 0;
 
@@ -154,13 +145,13 @@ function makeChord(w, h, vbm, container, fill) {
   /** Returns an array of tick angles and labels, given a group. */
   function groupTicks(d, i) {
     var vbin = 0, vbout = 0;
-    for (var j = 0; j < vbm.serverList.length; j++) {
+    for (var j = 0; j < server_list.length; j++) {
         vbout += vbmatrix[i][j];
         vbin += vbmatrix[j][i];
     }
     return [{
         angle: d.startAngle + ((d.endAngle - d.startAngle) / 2.0),
-        label: vbm.serverList[i] + " (a:" + vbout + ", r:" + vbin + ")"
+        label: server_list[i] + " (a:" + vbout + ", r:" + vbin + ")"
     }];
   }
 
@@ -176,5 +167,3 @@ function makeChord(w, h, vbm, container, fill) {
     };
   }
 }
-
-var chord = makeChord(800, 800, getBucketMapping(), '#chart', 'grey');

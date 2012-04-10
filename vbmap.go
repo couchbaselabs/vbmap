@@ -48,6 +48,14 @@ func getServerStates(bucket *couchbase.Bucket) map[string]string {
 	return rv
 }
 
+func getShortServerList(bucket *couchbase.Bucket) []string {
+	rv := []string{}
+	for _, node := range bucket.VBucketServerMap.ServerList {
+		rv = append(rv, couchbase.CleanupHost(node, commonSuffix))
+	}
+	return rv
+}
+
 func getBucket() *couchbase.Bucket {
 	bucket, err := couchbase.GetBucket(flag.Arg(0), "default", "default")
 	maybefatal(err, "Error getting bucket:  %v", err)
@@ -67,14 +75,48 @@ func mapHandler(w http.ResponseWriter, req *http.Request) {
 	json.NewEncoder(w).Encode(getVbMaps(bucket))
 	fmt.Fprintf(w, ";")
 
+	fmt.Fprintf(w, "var server_list = ")
+	json.NewEncoder(w).Encode(getShortServerList(bucket))
+	fmt.Fprintf(w, ";")
+
+	fmt.Fprintf(w, "var repmap = ")
+	json.NewEncoder(w).Encode(bucket.VBucketServerMap.VBucketMap)
+	fmt.Fprintf(w, ";")
+
 	fmt.Fprintf(w, "var server_states = ")
 	json.NewEncoder(w).Encode(getServerStates(bucket))
 	fmt.Fprintf(w, ";")
 }
 
+func bucketHandler(w http.ResponseWriter, req *http.Request) {
+	w.Header().Set("Content-type", "application/javascript")
+
+	bucket := getBucket()
+	defer bucket.Close()
+
+	fmt.Fprintf(w, "var bucketResponse = ")
+	json.NewEncoder(w).Encode(bucket)
+	fmt.Fprintf(w, ";\n")
+}
+
 func protovisHandler(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-type", "application/javascript")
 	http.ServeFile(w, req, "protovis-r3.2.js")
+}
+
+func d3Handler(w http.ResponseWriter, req *http.Request) {
+	w.Header().Set("Content-type", "application/javascript")
+	http.ServeFile(w, req, "d3.v2.min.js")
+}
+
+func repHandler(w http.ResponseWriter, req *http.Request) {
+	w.Header().Set("Content-type", "text/html")
+	http.ServeFile(w, req, "rep.html")
+}
+
+func chordHandler(w http.ResponseWriter, req *http.Request) {
+	w.Header().Set("Content-type", "application/javascript")
+	http.ServeFile(w, req, "chord.js")
 }
 
 func rootHandler(w http.ResponseWriter, req *http.Request) {
@@ -86,7 +128,11 @@ func main() {
 	flag.Parse()
 
 	http.HandleFunc("/", rootHandler)
+	http.HandleFunc("/rep", repHandler)
 	http.HandleFunc("/protovis.js", protovisHandler)
+	http.HandleFunc("/d3.js", d3Handler)
+	http.HandleFunc("/chord.js", chordHandler)
 	http.HandleFunc("/map", mapHandler)
+	http.HandleFunc("/bucket", bucketHandler)
 	log.Fatal(http.ListenAndServe(":4444", nil))
 }
