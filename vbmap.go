@@ -119,6 +119,11 @@ func chordHandler(w http.ResponseWriter, req *http.Request) {
 	http.ServeFile(w, req, "chord.js")
 }
 
+func vbmapHandler(w http.ResponseWriter, req *http.Request) {
+	w.Header().Set("Content-type", "application/javascript")
+	http.ServeFile(w, req, "vbmap.js")
+}
+
 func rootHandler(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-type", "text/html")
 	http.ServeFile(w, req, "root.html")
@@ -132,6 +137,7 @@ func main() {
 	http.HandleFunc("/protovis.js", protovisHandler)
 	http.HandleFunc("/d3.js", d3Handler)
 	http.HandleFunc("/chord.js", chordHandler)
+	http.HandleFunc("/vbmap.js", vbmapHandler)
 	http.HandleFunc("/map", mapHandler)
 	http.HandleFunc("/bucket", bucketHandler)
 	log.Fatal(http.ListenAndServe(":4444", nil))
