@@ -71,15 +71,22 @@ func mapHandler(w http.ResponseWriter, req *http.Request) {
 	bucket := getBucket()
 	defer bucket.Close()
 
+	req.ParseForm()
+	var_name := req.FormValue("name")
+
 	rv := map[string]interface{}{}
 	rv["vbmap"] = getVbMaps(bucket)
 	rv["server_list"] = getShortServerList(bucket)
 	rv["repmap"] = bucket.VBucketServerMap.VBucketMap
 	rv["server_states"] = getServerStates(bucket)
 
-	fmt.Fprintf(w, "var server_state = ")
+	if var_name != "" {
+		fmt.Fprintf(w, "var "+var_name+" = ")
+	}
 	json.NewEncoder(w).Encode(rv)
-	fmt.Fprintf(w, ";")
+	if var_name != "" {
+		fmt.Fprintf(w, ";")
+	}
 }
 
 func bucketHandler(w http.ResponseWriter, req *http.Request) {

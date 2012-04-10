@@ -1,5 +1,3 @@
-var byState = {};
-
 if(!Object.keys) Object.keys = function(o) {
     var ret=[],p;
     for(p in o) {
@@ -46,7 +44,7 @@ function colorize(server_states, d) {
     }
 }
 
-function nodeName(d) {
+function nodeName(byState, d) {
     var name = d.nodeName ? d.nodeName : d.data.key;
     if (name == 'all vbuckets') {
         var n=[];
@@ -60,7 +58,7 @@ function nodeName(d) {
 }
 
 function drawState(w, h, sstate, container) {
-    var data = {};
+    var data = {}, byState = {};
     for (var ip in sstate.vbmap) {
         var ob = {};
         var count = 0;
@@ -117,7 +115,7 @@ function drawState(w, h, sstate, container) {
         .attr("x", function(d) { return d.y; })
         .attr("dx", "6") // margin
         .attr("dy", ".35em") // vertical-align
-        .text(nodeName);
+        .text(function(d) { return nodeName(byState, d);});
 }
 
 function buildMatrix(servers, mapping) {
