@@ -71,20 +71,14 @@ func mapHandler(w http.ResponseWriter, req *http.Request) {
 	bucket := getBucket()
 	defer bucket.Close()
 
-	fmt.Fprintf(w, "var vbmap = ")
-	json.NewEncoder(w).Encode(getVbMaps(bucket))
-	fmt.Fprintf(w, ";")
+	rv := map[string]interface{}{}
+	rv["vbmap"] = getVbMaps(bucket)
+	rv["server_list"] = getShortServerList(bucket)
+	rv["repmap"] = bucket.VBucketServerMap.VBucketMap
+	rv["server_states"] = getServerStates(bucket)
 
-	fmt.Fprintf(w, "var server_list = ")
-	json.NewEncoder(w).Encode(getShortServerList(bucket))
-	fmt.Fprintf(w, ";")
-
-	fmt.Fprintf(w, "var repmap = ")
-	json.NewEncoder(w).Encode(bucket.VBucketServerMap.VBucketMap)
-	fmt.Fprintf(w, ";")
-
-	fmt.Fprintf(w, "var server_states = ")
-	json.NewEncoder(w).Encode(getServerStates(bucket))
+	fmt.Fprintf(w, "var server_state = ")
+	json.NewEncoder(w).Encode(rv)
 	fmt.Fprintf(w, ";")
 }
 
@@ -114,11 +108,6 @@ func repHandler(w http.ResponseWriter, req *http.Request) {
 	http.ServeFile(w, req, "rep.html")
 }
 
-func chordHandler(w http.ResponseWriter, req *http.Request) {
-	w.Header().Set("Content-type", "application/javascript")
-	http.ServeFile(w, req, "chord.js")
-}
-
 func vbmapHandler(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-type", "application/javascript")
 	http.ServeFile(w, req, "vbmap.js")
@@ -136,7 +125,6 @@ func main() {
 	http.HandleFunc("/rep", repHandler)
 	http.HandleFunc("/protovis.js", protovisHandler)
 	http.HandleFunc("/d3.js", d3Handler)
-	http.HandleFunc("/chord.js", chordHandler)
 	http.HandleFunc("/vbmap.js", vbmapHandler)
 	http.HandleFunc("/map", mapHandler)
 	http.HandleFunc("/bucket", bucketHandler)

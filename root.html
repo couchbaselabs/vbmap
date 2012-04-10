@@ -1,10 +1,8 @@
 <html>
   <head>
     <title>Cluster VBucket Distribution</title>
-    <link type="text/css" rel="stylesheet" href="root.css"/>
     <script type="text/javascript" src="/protovis.js"></script>
     <script type="text/javascript" src="/d3.js"></script>
-    <script type="text/javascript" src="/chord.js"></script>
     <script type="text/javascript" src="/vbmap.js"></script>
     <script type="text/javascript" src="/map"></script>
     <style type="text/css">
@@ -32,8 +30,8 @@
       <div id="cluster">
       <div id="replicas">
 <script type="text/javascript">
- drawState(700, 700);
- makeChord(700, 700, getBucketMapping(), '#replicas', 'grey');
+ drawState(700, 700, server_state);
+ makeChord(700, 700, server_state, '#replicas', 'grey');
  setTimeout(function() { location.reload(false); }, 10000);
     </script>
   </div></div></body>
