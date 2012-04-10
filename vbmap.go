@@ -93,11 +93,6 @@ func bucketHandler(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(w, ";\n")
 }
 
-func protovisHandler(w http.ResponseWriter, req *http.Request) {
-	w.Header().Set("Content-type", "application/javascript")
-	http.ServeFile(w, req, "protovis-r3.2.js")
-}
-
 func d3Handler(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-type", "application/javascript")
 	http.ServeFile(w, req, "d3.v2.min.js")
@@ -123,7 +118,6 @@ func main() {
 
 	http.HandleFunc("/", rootHandler)
 	http.HandleFunc("/rep", repHandler)
-	http.HandleFunc("/protovis.js", protovisHandler)
 	http.HandleFunc("/d3.js", d3Handler)
 	http.HandleFunc("/vbmap.js", vbmapHandler)
 	http.HandleFunc("/map", mapHandler)

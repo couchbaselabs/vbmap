@@ -1,13 +1,12 @@
 <html>
   <head>
     <title>Cluster VBucket Distribution</title>
-    <script type="text/javascript" src="/protovis.js"></script>
     <script type="text/javascript" src="/d3.js"></script>
     <script type="text/javascript" src="/vbmap.js"></script>
     <script type="text/javascript" src="/map"></script>
     <style type="text/css">
 
-#fig {
+#cluster {
   float: left;
 }
 
@@ -15,7 +14,7 @@
   float: right;
 }
 
-#replicas {
+#replicas, #cluster {
   font: 10px sans-serif;
 }
 
@@ -26,13 +25,15 @@
 }
     </style>
   </head>
-  <body><div id="center">
-      <div id="cluster">
-      <div id="replicas">
+  <body>
+    <div id="center">
+      <div id="cluster"></div>
+      <div id="replicas"></div>
+    </div>
 <script type="text/javascript">
- drawState(700, 700, server_state);
+ drawState(700, 700, server_state, '#cluster');
  makeChord(700, 700, server_state, '#replicas', 'grey');
  setTimeout(function() { location.reload(false); }, 10000);
     </script>
-  </div></div></body>
+  </body>
 </html>

@@ -11,18 +11,21 @@ if(!Object.keys) Object.keys = function(o) {
 };
 
 function countChildren(d) {
-    var rv = 0;
-    var nodes = d.nodes();
-    for (var n = 0; n < nodes.length; ++n) {
+    var rv = d.value || 0;
+    var nodes = d.nodes ? d.nodes() : null;
+    for (var n = 0; nodes && n < nodes.length; ++n) {
         if (typeof(nodes[n].nodeValue) == 'number') {
             rv += nodes[n].nodeValue;
+        } else if (nodes[n].value) {
+            rv += nodes[n].value;
         }
     }
     return rv;
 }
 
 function colorize(server_states, d) {
-    switch(d.nodeName) {
+    var name = d.nodeName ? d.nodeName : d.data.key;
+    switch(name) {
       case "all vbuckets":
         return "#ccf";
       case "active":
@@ -34,7 +37,7 @@ function colorize(server_states, d) {
       case "pending":
         return "#ff9";
     default: // servers
-        switch(server_states[d.nodeName]) {
+        switch(server_states[name]) {
           case "unhealthy":
             return "#f77";
         default:
@@ -44,18 +47,19 @@ function colorize(server_states, d) {
 }
 
 function nodeName(d) {
-    if (d.nodeName == 'all vbuckets') {
+    var name = d.nodeName ? d.nodeName : d.data.key;
+    if (name == 'all vbuckets') {
         var n=[];
         for (var s in byState) {
             n.push(s[0] + ": " + byState[s]);
         }
         return n.join(" ");
     } else {
-        return d.nodeName + " (" + countChildren(d) + ")";
+        return name + " (" + countChildren(d) + ")";
     }
 }
 
-function drawState(w, h, sstate) {
+function drawState(w, h, sstate, container) {
     var data = {};
     for (var ip in sstate.vbmap) {
         var ob = {};
@@ -72,27 +76,42 @@ function drawState(w, h, sstate) {
         data[ip] = ob;
     }
 
-    var vis = new pv.Panel()
-        .width(w)
-        .height(h)
-        .bottom(0);
+    var r = Math.min(w, h) / 2, color = d3.scale.category20c();
 
-    var partition = vis.add(pv.Layout.Partition.Fill)
-        .nodes(pv.dom(data).root("all vbuckets").nodes())
-        .size(countChildren)
-        .order("descending")
-        .orient("radial");
+    var vis = d3.select(container).append("svg:svg")
+        .attr("width", w)
+        .attr("height", h)
+      .append("svg:g")
+        .attr("transform", "translate(" + w / 2 + "," + h / 2 + ")");
 
-    partition.node.add(pv.Wedge)
-        .fillStyle(function(d) { return colorize(sstate.server_states, d, Object.keys(data));})
-        .strokeStyle("#fff")
-        .lineWidth(.5);
+    var partition = d3.layout.partition()
+        .sort(null)
+        .size([2 * Math.PI, r])
+        .children(function(d) { return isNaN(d.value) ? d3.entries(d.value) : null; })
+        .value(function(d) { return d.value; });
 
-    partition.label.add(pv.Label)
-        .text(nodeName)
-        .visible(function(d) { return d.angle * d.outerRadius >= 6; });
+    var arc = d3.svg.arc()
+        .startAngle(function(d) { return d.x; })
+        .endAngle(function(d) { return d.x + d.dx; })
+        .innerRadius(function(d, i) { return d.y; })
+        .outerRadius(function(d) { return d.y + d.dy; });
 
-    vis.render();
+    var g = vis.data(d3.entries({"all vbuckets": data})).selectAll("g")
+        .data(partition)
+      .enter().append("svg:g");
+
+    g.append("svg:path")
+        .attr("d", arc)
+        .attr("stroke", "#fff")
+        .attr('fill', function(d) { return colorize(sstate.server_states, d, Object.keys(data));})
+        .attr("fill-rule", "evenodd");
+
+    g.append("svg:text")
+        .attr("transform", function(d) { return "rotate(" + (d.x + d.dx / 2 - Math.PI / 2) / Math.PI * 180 + ")"; })
+        .attr("x", function(d) { return d.y; })
+        .attr("dx", "6") // margin
+        .attr("dy", ".35em") // vertical-align
+        .text(nodeName);
 }
 
 function buildMatrix(servers, mapping) {
@@ -238,13 +257,13 @@ function makeChord(w, h, sstate, container, fill) {
   /** Returns an array of tick angles and labels, given a group. */
   function groupTicks(d, i) {
     var vbin = 0, vbout = 0;
-    for (var j = 0; j < server_state.server_list.length; j++) {
+    for (var j = 0; j < sstate.server_list.length; j++) {
         vbout += vbmatrix[i][j];
         vbin += vbmatrix[j][i];
     }
     return [{
         angle: d.startAngle + ((d.endAngle - d.startAngle) / 2.0),
-        label: server_state.server_list[i] + " (a:" + vbout + ", r:" + vbin + ")"
+        label: sstate.server_list[i] + " (a:" + vbout + ", r:" + vbin + ")"
     }];
   }
 
