@@ -21,7 +21,7 @@ func maybefatal(err error, f string, args ...interface{}) {
 	}
 }
 
-func getVbMaps(bucket *couchbase.Bucket) map[string]vbmap {
+func getVbMapsMC(bucket *couchbase.Bucket) map[string]vbmap {
 
 	allstats := bucket.GetStats("vbucket")
 
@@ -35,6 +35,31 @@ func getVbMaps(bucket *couchbase.Bucket) map[string]vbmap {
 			maybefatal(err, "Error parsing vbucket:  %v/%v: %v",
 				k, v, err)
 			rv[sn][v] = append(rv[sn][v], uint16(vb))
+		}
+	}
+	return rv
+}
+
+func getVbMaps(bucket *couchbase.Bucket) map[string]vbmap {
+	rv := map[string]vbmap{}
+	nodenames := []string{}
+	for _, node := range bucket.VBucketServerMap.ServerList {
+		name := couchbase.CleanupHost(node, commonSuffix)
+		nodenames = append(nodenames, name)
+		rv[name] = vbmap{}
+	}
+	for vbnum, nodes := range bucket.VBucketServerMap.VBucketMap {
+		state := "active"
+		for _, position := range nodes {
+			if position >= 0 {
+				prev, ok := rv[nodenames[position]][state]
+				if !ok {
+					prev = []uint16{}
+				}
+				rv[nodenames[position]][state] = append(prev,
+					uint16(vbnum))
+			}
+			state = "replica"
 		}
 	}
 	return rv
@@ -76,6 +101,7 @@ func mapHandler(w http.ResponseWriter, req *http.Request) {
 
 	rv := map[string]interface{}{}
 	rv["vbmap"] = getVbMaps(bucket)
+	// rv["mc_vbmap"] = getVbMapsMC(bucket)
 	rv["server_list"] = getShortServerList(bucket)
 	rv["repmap"] = bucket.VBucketServerMap.VBucketMap
 	rv["server_states"] = getServerStates(bucket)
