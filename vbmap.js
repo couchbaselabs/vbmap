@@ -107,7 +107,13 @@ function drawState(w, h, sstate, container) {
         .attr("fill-rule", "evenodd");
 
     g.append("svg:text")
-        .attr("transform", function(d) { return "rotate(" + (d.x + d.dx / 2 - Math.PI / 2) / Math.PI * 180 + ")"; })
+        .attr("text-anchor", function(d) { return d.y == 0 ? "middle" : null;})
+        .attr("transform", function(d) {
+            if (d.y == 0) {
+                return 0;
+            }
+            return "rotate(" + (d.x + d.dx / 2 - Math.PI / 2) / Math.PI * 180 + ")";
+        })
         .attr("x", function(d) { return d.y; })
         .attr("dx", "6") // margin
         .attr("dy", ".35em") // vertical-align
