@@ -1,13 +1,10 @@
-#chart {
+#replicas, #cluster {
   font: 10px sans-serif;
+  float: left;
 }
 
 .chord path {
   fill-opacity: .67;
   stroke: #000;
   stroke-width: .5px;
-}
-
-.cluster {
-  font: 10px sans-serif;
 }

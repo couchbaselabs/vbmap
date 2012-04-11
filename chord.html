@@ -7,13 +7,12 @@
     <link type="text/css" rel="stylesheet" href="chord.css"/>
   </head>
   <body>
-    <div id="replicas"></div>
     <div id="cluster" class="cluster"></div>
-    <div id="cluster-old" class="cluster"></div>
+    <div id="replicas"></div>
     <script type="text/javascript" src="map-static.json"></script>
     <script type="text/javascript" src="vbmap.js"></script>
     <script type="text/javascript">
-      makeChord(800, 800, server_state, '#chart', 'grey');
+      makeChord(700, 700, server_state, '#replicas', 'grey');
       drawState(700, 700, server_state, '#cluster');
     </script>
   </body>
