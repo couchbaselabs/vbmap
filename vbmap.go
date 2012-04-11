@@ -15,7 +15,7 @@ type vbmap map[string][]uint16
 
 func maybefatal(err error, f string, args ...interface{}) {
 	if err != nil {
-		log.Fatalf(f, args...)
+		panic(fmt.Sprintf(f, args...))
 	}
 }
 
