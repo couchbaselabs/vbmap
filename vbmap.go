@@ -13,21 +13,19 @@ import (
 
 type vbmap map[string][]uint16
 
-var commonSuffix = ""
-
 func maybefatal(err error, f string, args ...interface{}) {
 	if err != nil {
 		log.Fatalf(f, args...)
 	}
 }
 
-func getVbMapsMC(bucket *couchbase.Bucket) map[string]vbmap {
+func getVbMapsMC(bucket *couchbase.Bucket, commonSuffixMC string) map[string]vbmap {
 
 	allstats := bucket.GetStats("vbucket")
 
 	rv := map[string]vbmap{}
 	for fullname, m := range allstats {
-		sn := couchbase.CleanupHost(fullname, commonSuffix)
+		sn := couchbase.CleanupHost(fullname, commonSuffixMC)
 		rv[sn] = vbmap{}
 
 		for k, v := range m {
@@ -40,11 +38,11 @@ func getVbMapsMC(bucket *couchbase.Bucket) map[string]vbmap {
 	return rv
 }
 
-func getVbMaps(bucket *couchbase.Bucket) map[string]vbmap {
+func getVbMaps(bucket *couchbase.Bucket, commonSuffixCB string) map[string]vbmap {
 	rv := map[string]vbmap{}
 	nodenames := []string{}
 	for _, node := range bucket.VBucketServerMap.ServerList {
-		name := couchbase.CleanupHost(node, commonSuffix)
+		name := couchbase.CleanupHost(node, commonSuffixCB)
 		nodenames = append(nodenames, name)
 		rv[name] = vbmap{}
 	}
@@ -65,18 +63,18 @@ func getVbMaps(bucket *couchbase.Bucket) map[string]vbmap {
 	return rv
 }
 
-func getServerStates(bucket *couchbase.Bucket) map[string]string {
+func getServerStates(bucket *couchbase.Bucket, commonSuffixMC string) map[string]string {
 	rv := make(map[string]string)
 	for _, node := range bucket.Nodes {
-		rv[couchbase.CleanupHost(node.Hostname, commonSuffix)] = node.Status
+		rv[couchbase.CleanupHost(node.Hostname, commonSuffixMC)] = node.Status
 	}
 	return rv
 }
 
-func getShortServerList(bucket *couchbase.Bucket) []string {
+func getShortServerList(bucket *couchbase.Bucket, commonSuffixMC string) []string {
 	rv := []string{}
 	for _, node := range bucket.VBucketServerMap.ServerList {
-		rv = append(rv, couchbase.CleanupHost(node, commonSuffix))
+		rv = append(rv, couchbase.CleanupHost(node, commonSuffixMC))
 	}
 	return rv
 }
@@ -84,8 +82,6 @@ func getShortServerList(bucket *couchbase.Bucket) []string {
 func getBucket() *couchbase.Bucket {
 	bucket, err := couchbase.GetBucket(flag.Arg(0), "default", "default")
 	maybefatal(err, "Error getting bucket:  %v", err)
-
-	commonSuffix = bucket.CommonAddressSuffix()
 
 	return bucket
 }
@@ -96,15 +92,18 @@ func mapHandler(w http.ResponseWriter, req *http.Request) {
 	bucket := getBucket()
 	defer bucket.Close()
 
+	commonSuffix := bucket.CommonAddressSuffix()
+	commonSuffixMC := couchbase.FindCommonSuffix(bucket.VBucketServerMap.ServerList)
+
 	req.ParseForm()
 	var_name := req.FormValue("name")
 
 	rv := map[string]interface{}{}
-	rv["vbmap"] = getVbMaps(bucket)
-	// rv["mc_vbmap"] = getVbMapsMC(bucket)
-	rv["server_list"] = getShortServerList(bucket)
+	rv["vbmap"] = getVbMaps(bucket, commonSuffixMC)
+	// rv["mc_vbmap"] = getVbMapsMC(bucket, commonSuffixMC)
+	rv["server_list"] = getShortServerList(bucket, commonSuffixMC)
 	rv["repmap"] = bucket.VBucketServerMap.VBucketMap
-	rv["server_states"] = getServerStates(bucket)
+	rv["server_states"] = getServerStates(bucket, commonSuffix)
 
 	if var_name != "" {
 		fmt.Fprintf(w, "var "+var_name+" = ")
