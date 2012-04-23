@@ -219,9 +219,6 @@ function makeChord(w, h, sstate, container, fill) {
 
   var labels = svg.append("g")
     .selectAll("path")
-      .data(chord.groups)
-    .enter().append("g")
-    .selectAll("g")
       .data(groups)
     .enter().append("g")
       .attr("transform", function(d) {
