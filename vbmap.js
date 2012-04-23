@@ -195,7 +195,7 @@ function makeChord(w, h, sstate, container, fill) {
     for (var i = 0; i < groups.length; i++) {
         var d = groups[i];
         var vbin = 0, vbout = 0,
-        vbtotal = sstate.vbmap[sstate.server_list[i]]["active"].length;
+        vbtotal = (sstate.vbmap[sstate.server_list[i]]["active"] || []).length;
         for (var j = 0; j < sstate.server_list.length; j++) {
             vbout += vbmatrix[i][j];
             vbin += vbmatrix[j][i];
