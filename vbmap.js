@@ -193,12 +193,12 @@ function makeChord(w, h, sstate, container, fill) {
         .attr("transform", "translate(" + w / 2 + "," + h / 2 + ")");
 
   svg.append("g")
+    .attr("class", "nodes")
     .selectAll("path")
       .data(chord.groups)
     .enter().append("path")
-      .style("fill", fill)
       .style("stroke", "black")
-      .attr("class", "node")
+        .attr("class", function(d, i) { return groupTicks(d, i)[0].state; })
       .attr("d", d3.svg.arc().innerRadius(r0).outerRadius(r1))
       .on("mouseover", fade(.1))
       .on("mouseout", fade(1));
@@ -260,14 +260,17 @@ function makeChord(w, h, sstate, container, fill) {
 
   /** Returns an array of tick angles and labels, given a group. */
   function groupTicks(d, i) {
-    var vbin = 0, vbout = 0;
+    var vbin = 0, vbout = 0,
+      vbtotal = sstate.vbmap[sstate.server_list[i]]["active"].length;
     for (var j = 0; j < sstate.server_list.length; j++) {
         vbout += vbmatrix[i][j];
         vbin += vbmatrix[j][i];
     }
     return [{
         angle: d.startAngle + ((d.endAngle - d.startAngle) / 2.0),
-        label: sstate.server_list[i] + " (a:" + vbout + ", r:" + vbin + ")"
+        label: sstate.server_list[i] + " (a:" + vbtotal +
+            ", out:" + vbout + ", in:" + vbin + ")",
+        state: vbtotal == vbout ? "good" : "bad"
     }];
   }
 
