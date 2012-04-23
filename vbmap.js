@@ -192,13 +192,27 @@ function makeChord(w, h, sstate, container, fill) {
       .append("g")
         .attr("transform", "translate(" + w / 2 + "," + h / 2 + ")");
 
+    for (var i = 0; i < groups.length; i++) {
+        var d = groups[i];
+        var vbin = 0, vbout = 0,
+        vbtotal = sstate.vbmap[sstate.server_list[i]]["active"].length;
+        for (var j = 0; j < sstate.server_list.length; j++) {
+            vbout += vbmatrix[i][j];
+            vbin += vbmatrix[j][i];
+        }
+        groups[i].angle = d.startAngle + ((d.endAngle - d.startAngle) / 2.0);
+        groups[i].label = sstate.server_list[i] + " (a:" + vbtotal +
+            ", out:" + vbout + ", in:" + vbin + ")";
+        groups[i].state = vbtotal == vbout ? "good" : "bad";
+    }
+
   svg.append("g")
     .attr("class", "nodes")
     .selectAll("path")
-      .data(chord.groups)
+      .data(groups)
     .enter().append("path")
       .style("stroke", "black")
-        .attr("class", function(d, i) { return groupTicks(d, i)[0].state; })
+        .attr("class", function(d, i) { return d.state; })
       .attr("d", d3.svg.arc().innerRadius(r0).outerRadius(r1))
       .on("mouseover", fade(.1))
       .on("mouseout", fade(1));
@@ -208,7 +222,7 @@ function makeChord(w, h, sstate, container, fill) {
       .data(chord.groups)
     .enter().append("g")
     .selectAll("g")
-      .data(groupTicks)
+      .data(groups)
     .enter().append("g")
       .attr("transform", function(d) {
         return "rotate(" + (d.angle * 180 / Math.PI - 90) + ")"
@@ -257,22 +271,6 @@ function makeChord(w, h, sstate, container, fill) {
       .attr("y", 0)
       .attr("visibility", "hidden")
       .text("Tooltip");
-
-  /** Returns an array of tick angles and labels, given a group. */
-  function groupTicks(d, i) {
-    var vbin = 0, vbout = 0,
-      vbtotal = sstate.vbmap[sstate.server_list[i]]["active"].length;
-    for (var j = 0; j < sstate.server_list.length; j++) {
-        vbout += vbmatrix[i][j];
-        vbin += vbmatrix[j][i];
-    }
-    return [{
-        angle: d.startAngle + ((d.endAngle - d.startAngle) / 2.0),
-        label: sstate.server_list[i] + " (a:" + vbtotal +
-            ", out:" + vbout + ", in:" + vbin + ")",
-        state: vbtotal == vbout ? "good" : "bad"
-    }];
-  }
 
   /** Returns an event handler for fading a given chord group. */
   function fade(opacity) {
