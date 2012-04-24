@@ -128,10 +128,10 @@ func bucketHandler(w http.ResponseWriter, req *http.Request) {
 type handler func(http.ResponseWriter, *http.Request)
 
 func oneFile(name string, contentType string) handler {
-  return func(w http.ResponseWriter, req *http.Request) {
-    w.Header().Set("Content-type", contentType)
-	  http.ServeFile(w, req, name)
-  }
+	return func(w http.ResponseWriter, req *http.Request) {
+		w.Header().Set("Content-type", contentType)
+		http.ServeFile(w, req, name)
+	}
 }
 
 func main() {
