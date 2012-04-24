@@ -125,33 +125,22 @@ func bucketHandler(w http.ResponseWriter, req *http.Request) {
 	fmt.Fprintf(w, ";\n")
 }
 
-func d3Handler(w http.ResponseWriter, req *http.Request) {
-	w.Header().Set("Content-type", "application/javascript")
-	http.ServeFile(w, req, "d3.v2.min.js")
-}
+type handler func(http.ResponseWriter, *http.Request)
 
-func repHandler(w http.ResponseWriter, req *http.Request) {
-	w.Header().Set("Content-type", "text/html")
-	http.ServeFile(w, req, "rep.html")
-}
-
-func vbmapHandler(w http.ResponseWriter, req *http.Request) {
-	w.Header().Set("Content-type", "application/javascript")
-	http.ServeFile(w, req, "vbmap.js")
-}
-
-func rootHandler(w http.ResponseWriter, req *http.Request) {
-	w.Header().Set("Content-type", "text/html")
-	http.ServeFile(w, req, "root.html")
+func oneFile(name string, contentType string) handler {
+  return func(w http.ResponseWriter, req *http.Request) {
+    w.Header().Set("Content-type", contentType)
+	  http.ServeFile(w, req, name)
+  }
 }
 
 func main() {
 	flag.Parse()
 
-	http.HandleFunc("/", rootHandler)
-	http.HandleFunc("/rep", repHandler)
-	http.HandleFunc("/d3.js", d3Handler)
-	http.HandleFunc("/vbmap.js", vbmapHandler)
+	http.HandleFunc("/", oneFile("root.html", "text/html"))
+	http.HandleFunc("/rep", oneFile("rep.html", "text/html"))
+	http.HandleFunc("/d3.js", oneFile("d3.v2.min.js", "application/javascript"))
+	http.HandleFunc("/vbmap.js", oneFile("vbmap.js", "application/javascript"))
 	http.HandleFunc("/map", mapHandler)
 	http.HandleFunc("/bucket", bucketHandler)
 	log.Fatal(http.ListenAndServe(":4444", nil))
