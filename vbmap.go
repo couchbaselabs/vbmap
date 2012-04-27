@@ -124,12 +124,19 @@ func oneFile(name string, contentType string) handler {
 }
 
 func main() {
+	staticPath := flag.Bool("static", false,
+		"Interpret URL as a static path (for testing)")
 	flag.Parse()
 
 	http.HandleFunc("/", oneFile("root.html", "text/html"))
 	http.HandleFunc("/rep", oneFile("rep.html", "text/html"))
 	http.HandleFunc("/d3.js", oneFile("d3.v2.min.js", "application/javascript"))
 	http.HandleFunc("/vbmap.js", oneFile("vbmap.js", "application/javascript"))
-	http.HandleFunc("/map", mapHandler)
+
+	if *staticPath {
+		http.HandleFunc("/map", oneFile(flag.Arg(0), "application/javascript"))
+	} else {
+		http.HandleFunc("/map", mapHandler)
+	}
 	log.Fatal(http.ListenAndServe(":4444", nil))
 }
