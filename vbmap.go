@@ -114,17 +114,6 @@ func mapHandler(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
-func bucketHandler(w http.ResponseWriter, req *http.Request) {
-	w.Header().Set("Content-type", "application/javascript")
-
-	bucket := getBucket()
-	defer bucket.Close()
-
-	fmt.Fprintf(w, "var bucketResponse = ")
-	json.NewEncoder(w).Encode(bucket)
-	fmt.Fprintf(w, ";\n")
-}
-
 type handler func(http.ResponseWriter, *http.Request)
 
 func oneFile(name string, contentType string) handler {
@@ -142,6 +131,5 @@ func main() {
 	http.HandleFunc("/d3.js", oneFile("d3.v2.min.js", "application/javascript"))
 	http.HandleFunc("/vbmap.js", oneFile("vbmap.js", "application/javascript"))
 	http.HandleFunc("/map", mapHandler)
-	http.HandleFunc("/bucket", bucketHandler)
 	log.Fatal(http.ListenAndServe(":4444", nil))
 }
