@@ -128,7 +128,24 @@ func files(contentType string, paths ...string) handler {
 
 	return func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Content-type", contentType)
+		// If there are multiple paths, we start returning
+		// 304s for all requests very quickly.
+		if len(paths) > 1 {
+			req.Header.Del("If-Modified-Since")
+		}
+
+		// Ugly hack for variable definition type call.
+		req.ParseForm()
+		var_name := req.FormValue("name")
+		if var_name != "" {
+			fmt.Fprintf(w, "var "+var_name+" = ")
+		}
+
 		http.ServeFile(w, req, <-ch)
+
+		if var_name != "" {
+			fmt.Fprintf(w, ";")
+		}
 	}
 }
 
