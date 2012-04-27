@@ -116,10 +116,19 @@ func mapHandler(w http.ResponseWriter, req *http.Request) {
 
 type handler func(http.ResponseWriter, *http.Request)
 
-func oneFile(name string, contentType string) handler {
+func files(contentType string, paths ...string) handler {
+	ch := make(chan string)
+	go func() {
+		for {
+			for _, p := range paths {
+				ch <- p
+			}
+		}
+	}()
+
 	return func(w http.ResponseWriter, req *http.Request) {
 		w.Header().Set("Content-type", contentType)
-		http.ServeFile(w, req, name)
+		http.ServeFile(w, req, <-ch)
 	}
 }
 
@@ -128,13 +137,13 @@ func main() {
 		"Interpret URL as a static path (for testing)")
 	flag.Parse()
 
-	http.HandleFunc("/", oneFile("root.html", "text/html"))
-	http.HandleFunc("/rep", oneFile("rep.html", "text/html"))
-	http.HandleFunc("/d3.js", oneFile("d3.v2.min.js", "application/javascript"))
-	http.HandleFunc("/vbmap.js", oneFile("vbmap.js", "application/javascript"))
+	http.HandleFunc("/", files("text/html", "root.html"))
+	http.HandleFunc("/rep", files("text/html", "rep.html"))
+	http.HandleFunc("/d3.js", files("application/javascript", "d3.v2.min.js"))
+	http.HandleFunc("/vbmap.js", files("application/javascript", "vbmap.js"))
 
 	if *staticPath {
-		http.HandleFunc("/map", oneFile(flag.Arg(0), "application/javascript"))
+		http.HandleFunc("/map", files("application/javascript", flag.Args()...))
 	} else {
 		http.HandleFunc("/map", mapHandler)
 	}
