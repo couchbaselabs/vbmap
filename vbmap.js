@@ -134,150 +134,196 @@ function buildMatrix(servers, mapping) {
     return m;
 }
 
-function makeChord(w, h, sstate, container, fill) {
-    var vbmatrix = buildMatrix(sstate.server_list, sstate.repmap);
-
+function makeChord(w, h, container) {
     var padding = 0;
+    var fill = 'black';
+    var tooltip = { };
+    var drawn = false;
+    var hovering = -1;
 
     var chord = d3.layout.chord()
         .padding(padding)
-        .sortSubgroups(d3.descending)
-        .matrix(vbmatrix);
+        .sortSubgroups(d3.descending);
 
-    var groups = chord.groups();
-    var arcs = chord.chords();
-    var arcLength = ((2.0 * Math.PI) - (groups.length * padding)) / groups.length;
-    var start = 0;
-    var positions = [],
-        sizeFactors = [];
+    var chordrv = function(sstate) {
+        var vbmatrix = buildMatrix(sstate.server_list, sstate.repmap);
 
-    for (var i = 0; i < groups.length; i++) {
-        var origWidth = groups[i].endAngle - groups[i].startAngle;
-        positions.push(start);
-        groups[i].startAngle = start;
-        groups[i].endAngle = start + arcLength;
-        var newWidth = groups[i].endAngle - groups[i].startAngle;
-        sizeFactors.push(newWidth / origWidth);
-        start = start + arcLength + padding;
-    }
+        chord.matrix(vbmatrix);
 
-    var allChordSegs = [];
-    for (var i = 0; i < arcs.length; i++) {
-        allChordSegs.push(arcs[i].source);
-        allChordSegs.push(arcs[i].target);
-    }
+        var groups = chord.groups();
+        var arcs = chord.chords();
+        var arcLength = ((2.0 * Math.PI) - (groups.length * padding)) / groups.length;
+        var start = 0;
+        var positions = [],
+            sizeFactors = [];
 
-    allChordSegs.sort(function(a, b) {
-        return a.startAngle - b.startAngle;
-    });
-
-    for (var i = 0; i < allChordSegs.length; i++) {
-        var seg = allChordSegs[i];
-        var width = seg.endAngle - seg.startAngle;
-        if (sizeFactors[seg.index] < 1.0) {
-            width = width * sizeFactors[seg.index];
+        for (var i = 0; i < groups.length; i++) {
+            var origWidth = groups[i].endAngle - groups[i].startAngle;
+            positions.push(start);
+            groups[i].startAngle = start;
+            groups[i].endAngle = start + arcLength;
+            var newWidth = groups[i].endAngle - groups[i].startAngle;
+            sizeFactors.push(newWidth / origWidth);
+            start = start + arcLength + padding;
         }
-        seg.startAngle = positions[seg.index];
-        seg.endAngle = seg.startAngle + width;
-        positions[seg.index] = seg.endAngle;
-    }
 
-    var r0 = Math.min(w, h) * .41,
-        r1 = r0 * 1.1;
-
-    var svg = d3.select(container)
-      .append("svg")
-        .attr("width", w)
-        .attr("height", h)
-      .append("g")
-        .attr("transform", "translate(" + w / 2 + "," + h / 2 + ")");
-
-    for (var i = 0; i < groups.length; i++) {
-        var d = groups[i];
-        var vbin = 0, vbout = 0,
-        vbtotal = (sstate.vbmap[sstate.server_list[i]]["active"] || []).length;
-        for (var j = 0; j < sstate.server_list.length; j++) {
-            vbout += vbmatrix[i][j];
-            vbin += vbmatrix[j][i];
+        var allChordSegs = [];
+        for (var i = 0; i < arcs.length; i++) {
+            allChordSegs.push(arcs[i].source);
+            allChordSegs.push(arcs[i].target);
+            arcs[i].key = sstate.server_list[arcs[i].source.index] + "-" +
+                sstate.server_list[arcs[i].target.index];
         }
-        groups[i].angle = d.startAngle + ((d.endAngle - d.startAngle) / 2.0);
-        groups[i].label = sstate.server_list[i] + " (a:" + vbtotal +
-            ", out:" + vbout + ", in:" + vbin + ")";
-        groups[i].state = vbtotal == vbout ? "good" : "bad";
-    }
 
-  svg.append("g")
-    .attr("class", "nodes")
-    .selectAll("path")
-      .data(groups)
-    .enter().append("path")
-      .style("stroke", "black")
-        .attr("class", function(d, i) { return d.state; })
-      .attr("d", d3.svg.arc().innerRadius(r0).outerRadius(r1))
-      .on("mouseover", fade(.1))
-      .on("mouseout", fade(1));
+        allChordSegs.sort(function(a, b) {
+            return a.startAngle - b.startAngle;
+        });
 
-  var labels = svg.append("g")
-    .selectAll("path")
-      .data(groups)
-    .enter().append("g")
-      .attr("transform", function(d) {
-        return "rotate(" + (d.angle * 180 / Math.PI - 90) + ")"
-            + "translate(" + r1 + ",0)";
-      });
+        for (var i = 0; i < allChordSegs.length; i++) {
+            var seg = allChordSegs[i];
+            var width = seg.endAngle - seg.startAngle;
+            if (sizeFactors[seg.index] < 1.0) {
+                width = width * sizeFactors[seg.index];
+            }
+            seg.startAngle = positions[seg.index];
+            seg.endAngle = seg.startAngle + width;
+            positions[seg.index] = seg.endAngle;
+        }
 
-  labels.append("text")
-      .attr("text-anchor", "middle")
-      .attr("transform", "rotate(90) translate(0, 20)")
-      .text(function(d, i) { return d.label; });
+        var r0 = Math.min(w, h) * .41,
+            r1 = r0 * 1.1;
 
-  var chords = svg.append("g")
-      .attr("class", "chord")
-    .selectAll("path")
-      .data(chord.chords)
-    .enter().append("path")
-      .style("fill", fill)
-      .attr("d", d3.svg.chord().radius(r0))
-      .style("opacity", 1)
-      .on("mouseover", function(d, i) {
-          tooltip.attr("visibility", "visible");
-          tooltip.text(d.source.value + " \u27f7 " + d.target.value);
-          svg.selectAll("g.chord path")
-                  .filter(function(di) {
-                      return di.source != d.source && di.target != d.target;
-                  })
-            .transition()
-              .style("opacity", 0.1);
-      })
-      .on("mousemove", function(d, i) {
-          var evt = d3.mouse(this);
-          tooltip.attr("x", evt[0]-8);
-          tooltip.attr("y", evt[1]-5);
-      })
-      .on("mouseout", function() {
-          tooltip.attr("visibility", "hidden");
-          svg.selectAll("g.chord path")
-            .transition()
-              .style("opacity", 1);
-      });
+        var svg = d3.select(container + " svg g.canvas");
 
-  var tooltip = svg.append("text")
-      .attr("class", "tooltip")
-      .attr("id", "tooltip")
-      .attr("x", 0)
-      .attr("y", 0)
-      .attr("visibility", "hidden")
-      .text("Tooltip");
+        for (var i = 0; i < groups.length; i++) {
+            var d = groups[i];
+            var vbin = 0,
+                vbout = 0,
+                vbtotal = (sstate.vbmap[sstate.server_list[i]]["active"] || []).length;
+            for (var j = 0; j < sstate.server_list.length; j++) {
+                vbout += vbmatrix[i][j];
+                vbin += vbmatrix[j][i];
+            }
+            groups[i].angle = d.startAngle + ((d.endAngle - d.startAngle) / 2.0);
+            groups[i].label = sstate.server_list[i] + " (a:" + vbtotal +
+                ", out:" + vbout + ", in:" + vbin + ")";
+            groups[i].state = vbtotal == vbout ? "good" : "bad";
+            groups[i].ip = sstate.server_list[i];
+        }
 
-  /** Returns an event handler for fading a given chord group. */
-  function fade(opacity) {
-    return function(g, i) {
-      svg.selectAll("g.chord path")
-          .filter(function(d) {
-            return d.source.index != i && d.target.index != i;
+        if (!drawn) {
+            svg = d3.select(container)
+              .append("svg")
+                .attr("width", w)
+                .attr("height", h)
+              .append("g")
+                .attr("class", "canvas")
+                .attr("transform", "translate(" + w / 2 + "," + h / 2 + ")");
+
+            svg.append("g")
+                .attr("class", "nodes");
+
+            svg.append("g")
+                .attr("class", "labels");
+
+            svg.append("g")
+                .attr("class", "chord");
+
+            tooltip = svg.append("text")
+                .attr("class", "tooltip")
+                .attr("id", "tooltip")
+                .attr("x", 0)
+                .attr("y", 0)
+                .attr("visibility", "hidden")
+                .text("Tooltip");
+
+            drawn = true;
+        }
+
+        var labels = svg.select("g.labels").selectAll("g.label")
+            .data(groups, function() { return d.ip; } );
+
+        labels.enter().append("g")
+            .attr("class", "label")
+            .attr("transform", function(d) {
+                return "rotate(" + (d.angle * 180 / Math.PI - 90) + ")"
+                    + "translate(" + r1 + ",0)";
+            })
+            .append("text")
+            .text(function(d, i) { return d.label; })
+            .attr("text-anchor", "middle")
+            .attr("transform", "rotate(90) translate(0, 20)");
+
+        labels.exit().remove();
+
+        labels.selectAll("text").text(function(d, i) { return d.label; });
+
+        svg.select("g.nodes").selectAll("path")
+            .data(groups)
+            .attr("class", function(d, i) { return d.state; })
+          .enter().append("path")
+            .attr("d", d3.svg.arc().innerRadius(r0).outerRadius(r1))
+            .attr("class", function(d, i) { return d.state; })
+            .on("mouseover", fade(.1))
+            .on("mouseout", fade(1));
+
+      d3.select(container + " .chord path").remove();
+
+      var chords = svg.selectAll("g.chord")
+        .selectAll("path")
+            .data(arcs, function(d, i) { return d.key; })
+          .attr("d", d3.svg.chord().radius(r0))
+            .style("opacity", function(d, i) {
+                var hovered = hovering == -1 || d.source.index == hovering || d.target.index == hovering;
+                return hovered ? 1 : 0.1;
+            });
+
+        chords.enter().append("path")
+          .attr("d", d3.svg.chord().radius(r0))
+          .style("fill", fill)
+          .on("mouseover", function(d, i) {
+              tooltip.attr("visibility", "visible");
+              tooltip.text(d.source.value + " \u27f7 " + d.target.value);
+              svg.selectAll("g.chord path")
+                      .filter(function(di) {
+                          return di.source != d.source && di.target != d.target;
+                      })
+                .transition()
+                  .style("opacity", 0.1);
           })
-        .transition()
-          .style("opacity", opacity);
+          .on("mousemove", function(d, i) {
+              var evt = d3.mouse(this);
+              tooltip.attr("x", evt[0]-8);
+              tooltip.attr("y", evt[1]-5);
+          })
+          .on("mouseout", function() {
+              tooltip.attr("visibility", "hidden");
+              svg.selectAll("g.chord path")
+                .transition()
+                  .style("opacity", 1);
+          });
+
+        chords.exit().remove();
+
+      /** Returns an event handler for fading a given chord group. */
+      function fade(opacity) {
+        return function(g, i) {
+          hovering = opacity == 1 ? -1 : i;
+          svg.selectAll("g.chord path")
+              .filter(function(d) {
+                return d.source.index != i && d.target.index != i;
+              })
+            .transition()
+              .style("opacity", opacity);
+        };
+      }
     };
-  }
+
+    chordrv.fill = function(value) {
+        if (!arguments.length) return fill;
+        fill = value;
+        return chordrv;
+    };
+
+    return chordrv;
 }

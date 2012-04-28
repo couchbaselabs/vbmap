@@ -16,6 +16,10 @@
   stroke-width: .5px;
 }
 
+.nodes {
+  stroke: black;
+}
+
 .nodes path {
   fill: grey;
 }
@@ -33,14 +37,14 @@
     </div>
 <script type="text/javascript">
  drawState(700, 700, server_state, '#cluster');
- makeChord(700, 700, server_state, '#replicas', 'grey');
+ var chord = makeChord(700, 700, '#replicas').fill('grey');
+ chord(server_state);
  setInterval(function() {
-   d3.json("/map", function(json) {
+   d3.json("/map?rand=" + Math.random(), function(json) {
    if (json != null) {
      d3.select("#cluster svg").remove();
      drawState(700, 700, json, '#cluster');
-     d3.select("#replicas svg").remove();
-     makeChord(700, 700, json, '#replicas', 'grey');
+     chord(json);
    }
  });
  }, 5000);
