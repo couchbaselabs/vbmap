@@ -126,6 +126,7 @@ function makeChord(w, h, container) {
     var drawn = false;
     var hovering = -1;
     var prevarcs = null;
+    var prevnodes = null;
 
     var chord = d3.layout.chord()
         .padding(padding)
@@ -268,6 +269,7 @@ function makeChord(w, h, container) {
 
         var nodes = svg.select("g.nodes").selectAll("path")
             .data(groups)
+            .attr("d", d3.svg.arc().innerRadius(r0).outerRadius(r1))
             .attr("class", function(d, i) { return d.state; });
 
         nodes.enter().append("path")
@@ -277,8 +279,15 @@ function makeChord(w, h, container) {
             .on("mouseout", fade(1));
 
         nodes.transition()
+            .each("end", function() { prevnodes = groups; })
             .duration(1000)
             .ease('quad')
+            .attrTween("d", function(d, i, a) {
+                var ip = d3.interpolate((prevnodes && prevnodes[i]) || d, d);
+                return function(t) {
+                    return d3.svg.arc().innerRadius(r0).outerRadius(r1)(ip(t), i);
+                };
+            })
             .styleTween("fill", function(d, i, a) {
                 return d3.interpolate(a, d.color);
             });
@@ -321,7 +330,7 @@ function makeChord(w, h, container) {
 
         chords.transition()
             .each("end", function() { prevarcs = arcs; })
-                .duration(1000)
+            .duration(1000)
             .ease('back')
             .attrTween("d", function(d, i, a) {
                 if (prevarcs == null) {
