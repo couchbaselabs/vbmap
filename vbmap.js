@@ -276,6 +276,7 @@ function makeChord(w, h, container) {
 
         nodes.transition()
             .duration(1000)
+            .ease('quad')
             .styleTween("fill", function(d, i, a) {
                 return d3.interpolate(a, d.color);
             });
@@ -319,6 +320,7 @@ function makeChord(w, h, container) {
         chords.transition()
             .each("end", function() { prevarcs = arcs; })
             .duration(1000)
+            .ease('back')
             .attrTween("d", function(d, i, a) {
                 if (prevarcs == null) {
                     return function() {
