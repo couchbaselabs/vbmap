@@ -326,7 +326,7 @@ function makeChord(w, h, container) {
                     };
                 }
                 return function(t) {
-                    var a = prevarcs[i], b = d;
+                    var b = d, a = prevarcs[i] || d;
                     var result = d3.interpolate(a, b)(t);
                     return d3.svg.chord().radius(r0)(result, i);
                 };
