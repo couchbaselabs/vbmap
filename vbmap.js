@@ -140,6 +140,7 @@ function makeChord(w, h, container) {
     var tooltip = { };
     var drawn = false;
     var hovering = -1;
+    var prevarcs = null;
 
     var chord = d3.layout.chord()
         .padding(padding)
@@ -208,6 +209,7 @@ function makeChord(w, h, container) {
             groups[i].label = sstate.server_list[i] + " (a:" + vbtotal +
                 ", out:" + vbout + ", in:" + vbin + ")";
             groups[i].state = vbtotal == vbout ? "good" : "bad";
+            groups[i].color = vbtotal == vbout ? "grey" : "red";
             groups[i].ip = sstate.server_list[i];
         }
 
@@ -258,16 +260,23 @@ function makeChord(w, h, container) {
 
         labels.selectAll("text").text(function(d, i) { return d.label; });
 
-        svg.select("g.nodes").selectAll("path")
+        var nodes = svg.select("g.nodes").selectAll("path")
             .data(groups)
-            .attr("class", function(d, i) { return d.state; })
-          .enter().append("path")
+            .attr("class", function(d, i) { return d.state; });
+
+        nodes.enter().append("path")
             .attr("d", d3.svg.arc().innerRadius(r0).outerRadius(r1))
             .attr("class", function(d, i) { return d.state; })
             .on("mouseover", fade(.1))
             .on("mouseout", fade(1));
 
-      d3.select(container + " .chord path").remove();
+        nodes.transition()
+            .duration(1000)
+            .styleTween("fill", function(d, i, a) {
+                return d3.interpolate(a, d.color);
+            });
+
+        nodes.exit().remove();
 
       var chords = svg.selectAll("g.chord")
         .selectAll("path")
@@ -303,6 +312,22 @@ function makeChord(w, h, container) {
                   .style("opacity", 1);
           });
 
+        chords.transition()
+            .each("end", function() { prevarcs = arcs; })
+            .duration(1000)
+            .attrTween("d", function(d, i, a) {
+                if (prevarcs == null) {
+                    return function() {
+                        return d3.svg.chord().radius(r0)(d, i);
+                    };
+                }
+                return function(t) {
+                    var a = prevarcs[i], b = d;
+                    var result = d3.interpolate(a, b)(t);
+                    return d3.svg.chord().radius(r0)(result, i);
+                };
+            });
+
         chords.exit().remove();
 
       /** Returns an event handler for fading a given chord group. */
@@ -317,6 +342,7 @@ function makeChord(w, h, container) {
               .style("opacity", opacity);
         };
       }
+
     };
 
     chordrv.fill = function(value) {
