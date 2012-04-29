@@ -191,6 +191,10 @@ function makeChord(w, h, container) {
             positions[seg.index] = seg.endAngle;
         }
 
+        arcs.sort(function(a, b) {
+            return a.startAngle - b.startAngle;
+        });
+
         var r0 = Math.min(w, h) * .41,
             r1 = r0 * 1.1;
 
