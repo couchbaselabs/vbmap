@@ -257,7 +257,6 @@ function makeChord(w, h, container) {
                 ", out:" + vbout + ", in:" + vbin + ")";
             groups[i].state = vbtotal == vbout ? "good" : "bad";
             groups[i].color = vbtotal == vbout ? "grey" : "red";
-            groups[i].ip = sstate.server_list[i];
         }
 
         if (!drawn) {
@@ -290,12 +289,12 @@ function makeChord(w, h, container) {
         }
 
         var labels = svg.select("g.labels").selectAll("g.label")
-            .data(groups, function() { return d.ip; } );
+            .data(groups);
 
         labels.enter().append("g")
             .attr("class", "label")
             .attr("transform", function(d) {
-                return "rotate(" + (d.angle * 180 / Math.PI - 90) + ")"
+                return "rotate(" + (d.angle * 180 / Math.PI - 90) + ") "
                     + "translate(" + r1 + ",0)";
             })
           .append("text")
@@ -304,6 +303,15 @@ function makeChord(w, h, container) {
             .attr("transform", "rotate(90) translate(0, 20)");
 
         labels.exit().remove();
+
+        labels.transition()
+            .duration(1000)
+            .ease('quad')
+            .attrTween("transform", function(d, i, a) {
+                var target = "rotate(" + (d.angle * 180 / Math.PI - 90) + ") "
+                    + "translate(" + r1 + ",0)";
+                return d3.interpolate(a, target);
+            });
 
         labels.selectAll("text").text(function(d, i) { return d.label; });
 
