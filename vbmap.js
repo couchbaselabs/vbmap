@@ -23,11 +23,17 @@ function makeState(w, h, container) {
         return rv;
     }
 
-    function colorize(server_states, d) {
+    function colorize(byState, sstate, d) {
         var name = d.nodeName ? d.nodeName : d.data.key;
         switch(name) {
           case "all vbuckets":
-            return "#ccf";
+            var a = (byState['active'] || 0),
+                r = (byState['replica'] || 0);
+            if (a < sstate.repmap.length || a > r ) {
+                return "#f77";
+            } else {
+                return "#ccf";
+            }
           case "active":
             return "#9f9";
           case "replica":
@@ -37,7 +43,7 @@ function makeState(w, h, container) {
           case "pending":
             return "#ff9";
         default: // servers
-            switch(server_states[name]) {
+            switch(sstate.server_states[name]) {
               case "unhealthy":
                 return "#f77";
             default:
@@ -107,7 +113,7 @@ function makeState(w, h, container) {
         g.append("svg:path")
             .attr("d", arc)
             .attr("stroke", "#fff")
-            .attr('fill', function(d) { return colorize(sstate.server_states, d, Object.keys(data));});
+            .attr('fill', function(d) { return colorize(byState, sstate, d, Object.keys(data));});
 
         g.append("svg:text")
             .attr("text-anchor", function(d) { return d.y == 0 ? "middle" : null;})
@@ -124,12 +130,12 @@ function makeState(w, h, container) {
 
         vis.selectAll("path")
             .data(partition)
-            .attr('fill', function(d) { return colorize(sstate.server_states, d, Object.keys(data));})
+            .attr('fill', function(d) { return colorize(byState, sstate, d, Object.keys(data));})
           .transition()
             .each("end", function() { prevdata = partition; })
             .duration(1000)
             .styleTween("fill", function(d, i, a) {
-                var newColor = colorize(sstate.server_states, d, Object.keys(data));
+                var newColor = colorize(byState, sstate, d, Object.keys(data));
                 return d3.interpolate(a, newColor);
             })
             .attrTween("d", function(d, i, a) {
