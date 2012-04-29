@@ -59,7 +59,7 @@ function makeState(w, h, container) {
         }
     }
 
-    var r = Math.min(w, h) / 2;
+    var r = Math.min(w, h) / 2, prevdata = null;
 
     d3.select(container).append("svg:svg")
         .attr("width", w)
@@ -125,22 +125,29 @@ function makeState(w, h, container) {
         vis.selectAll("path")
             .data(partition)
             .attr('fill', function(d) { return colorize(sstate.server_states, d, Object.keys(data));})
-            .attr("d", arc)
           .transition()
+            .each("end", function() { prevdata = partition; })
             .duration(1000)
             .styleTween("fill", function(d, i, a) {
                 var newColor = colorize(sstate.server_states, d, Object.keys(data));
                 return d3.interpolate(a, newColor);
+            })
+            .attrTween("d", function(d, i, a) {
+                var target = arc(d, i);
+                return d3.interpolate(a, target);
             });
 
         vis.selectAll("text")
             .data(partition)
             .text(function(d, i) { return nodeName(byState, d);})
-            .attr("transform", function(d) {
+          .transition()
+            .duration(1000)
+            .attrTween("transform", function(d, i, a) {
+                var target =  "rotate(" + (d.x + d.dx / 2 - Math.PI / 2) / Math.PI * 180 + ")";
                 if (d.y == 0) {
-                    return 0;
+                    target = 0;
                 }
-                return "rotate(" + (d.x + d.dx / 2 - Math.PI / 2) / Math.PI * 180 + ")";
+                return d3.interpolate(a, target);
             });
     }
     return update;
