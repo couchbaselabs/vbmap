@@ -8,7 +8,7 @@ if(!Object.keys) Object.keys = function(o) {
     return ret;
 };
 
-function drawState(w, h, sstate, container) {
+function makeState(w, h, container) {
 
     function countChildren(d) {
             var rv = d.value || 0;
@@ -59,64 +59,91 @@ function drawState(w, h, sstate, container) {
         }
     }
 
-    var data = {}, byState = {};
-    for (var ip in sstate.vbmap) {
-        var ob = {};
-        var count = 0;
-        for (var state in sstate.vbmap[ip]) {
-            ob[state] = sstate.vbmap[ip][state].length;
-            count += ob[state];
-            if (state in byState) {
-                byState[state] += ob[state];
-            } else {
-                byState[state] = ob[state];
-            }
-        }
-        data[ip] = ob;
-    }
+    var r = Math.min(w, h) / 2;
 
-    var r = Math.min(w, h) / 2, color = d3.scale.category20c();
-
-    var vis = d3.select(container).append("svg:svg")
+    d3.select(container).append("svg:svg")
         .attr("width", w)
         .attr("height", h)
-        .append("svg:g")
+      .append("svg:g")
+        .attr("class", "container")
         .attr("transform", "translate(" + w / 2 + "," + h / 2 + ")");
 
-    var partition = d3.layout.partition()
-            .sort(null)
-        .size([2 * Math.PI, r])
-        .children(function(d) { return isNaN(d.value) ? d3.entries(d.value) : null; })
-        .value(function(d) { return d.value; });
+    function update(sstate) {
+        var data = {}, byState = {};
 
-    var arc = d3.svg.arc()
-        .startAngle(function(d) { return d.x; })
-        .endAngle(function(d) { return d.x + d.dx; })
-        .innerRadius(function(d, i) { return d.y; })
-        .outerRadius(function(d) { return d.y + d.dy; });
-
-    var g = vis.data(d3.entries({"all vbuckets": data})).selectAll("g")
-        .data(partition)
-        .enter().append("svg:g");
-
-    g.append("svg:path")
-        .attr("d", arc)
-        .attr("stroke", "#fff")
-        .attr('fill', function(d) { return colorize(sstate.server_states, d, Object.keys(data));})
-        .attr("fill-rule", "evenodd");
-
-    g.append("svg:text")
-        .attr("text-anchor", function(d) { return d.y == 0 ? "middle" : null;})
-        .attr("transform", function(d) {
-            if (d.y == 0) {
-                return 0;
+        for (var ip in sstate.vbmap) {
+            var ob = {};
+            var count = 0;
+            for (var state in sstate.vbmap[ip]) {
+                ob[state] = sstate.vbmap[ip][state].length;
+                count += ob[state];
+                if (state in byState) {
+                    byState[state] += ob[state];
+                } else {
+                    byState[state] = ob[state];
+                }
             }
-            return "rotate(" + (d.x + d.dx / 2 - Math.PI / 2) / Math.PI * 180 + ")";
-        })
-        .attr("x", function(d) { return d.y; })
-        .attr("dx", "6") // margin
+            data[ip] = ob;
+        }
+
+        var partition = d3.layout.partition()
+            .sort(null)
+            .size([2 * Math.PI, r])
+            .children(function(d) { return isNaN(d.value) ? d3.entries(d.value) : null; })
+            .value(function(d) { return d.value; });
+
+        var arc = d3.svg.arc()
+            .startAngle(function(d) { return d.x; })
+            .endAngle(function(d) { return d.x + d.dx; })
+            .innerRadius(function(d, i) { return d.y; })
+            .outerRadius(function(d) { return d.y + d.dy; });
+
+        var vis = d3.select(container + " g.container");
+
+        var g = vis.data(d3.entries({"all vbuckets": data})).selectAll("g")
+            .data(partition)
+            .enter().append("svg:g");
+
+        g.append("svg:path")
+            .attr("d", arc)
+            .attr("stroke", "#fff")
+            .attr('fill', function(d) { return colorize(sstate.server_states, d, Object.keys(data));});
+
+        g.append("svg:text")
+            .attr("text-anchor", function(d) { return d.y == 0 ? "middle" : null;})
+            .attr("transform", function(d) {
+                if (d.y == 0) {
+                    return 0;
+                }
+                return "rotate(" + (d.x + d.dx / 2 - Math.PI / 2) / Math.PI * 180 + ")";
+            })
+            .attr("x", function(d) { return d.y; })
+            .attr("dx", "6") // margin
             .attr("dy", ".35em") // vertical-align
-        .text(function(d) { return nodeName(byState, d);});
+            .text(function(d) { return nodeName(byState, d);});
+
+        vis.selectAll("path")
+            .data(partition)
+            .attr('fill', function(d) { return colorize(sstate.server_states, d, Object.keys(data));})
+            .attr("d", arc)
+          .transition()
+            .duration(1000)
+            .styleTween("fill", function(d, i, a) {
+                var newColor = colorize(sstate.server_states, d, Object.keys(data));
+                return d3.interpolate(a, newColor);
+            });
+
+        vis.selectAll("text")
+            .data(partition)
+            .text(function(d, i) { return nodeName(byState, d);})
+            .attr("transform", function(d) {
+                if (d.y == 0) {
+                    return 0;
+                }
+                return "rotate(" + (d.x + d.dx / 2 - Math.PI / 2) / Math.PI * 180 + ")";
+            });
+    }
+    return update;
 }
 
 function makeChord(w, h, container) {

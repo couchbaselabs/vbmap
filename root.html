@@ -36,14 +36,14 @@
       <div id="replicas"></div>
     </div>
 <script type="text/javascript">
- drawState(700, 700, server_state, '#cluster');
+ var state = makeState(700, 700, '#cluster');
  var chord = makeChord(700, 700, '#replicas').fill('grey');
+ state(server_state);
  chord(server_state);
  setInterval(function() {
    d3.json("/map?rand=" + Math.random(), function(json) {
    if (json != null) {
-     d3.select("#cluster svg").remove();
-     drawState(700, 700, json, '#cluster');
+     state(json);
      chord(json);
    }
  });
