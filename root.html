@@ -1,6 +1,7 @@
 <html>
   <head>
     <title>Cluster VBucket Distribution</title>
+    <script type="text/javascript" src="/jquery.js"></script>
     <script type="text/javascript" src="/d3.js"></script>
     <script type="text/javascript" src="/vbmap.js"></script>
     <script type="text/javascript" src="/map?name=server_state"></script>
@@ -37,20 +38,22 @@
     </div>
 <script type="text/javascript">
 
-var imgdim = Math.round((window.innerWidth / 2) - 20);
+ $(document).ready(function() {
+   var imgdim = Math.round((window.innerWidth / 2) - 20);
 
- var state = makeState(imgdim, imgdim, '#cluster');
- var chord = makeChord(imgdim, imgdim, '#replicas').fill('grey');
- state(server_state);
- chord(server_state);
- setInterval(function() {
-   d3.json("/map?rand=" + Math.random(), function(json) {
-   if (json != null) {
-     state(json);
-     chord(json);
-   }
+   var state = makeState(imgdim, imgdim, '#cluster');
+   var chord = makeChord(imgdim, imgdim, '#replicas').fill('grey');
+   state(server_state);
+   chord(server_state);
+   setInterval(function() {
+     d3.json("/map?rand=" + Math.random(), function(json) {
+     if (json != null) {
+       state(json);
+       chord(json);
+     }
+   });
+   }, 5000);
  });
- }, 5000);
     </script>
   </body>
 </html>

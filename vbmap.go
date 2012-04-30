@@ -156,6 +156,7 @@ func main() {
 
 	http.HandleFunc("/", files("text/html", "root.html"))
 	http.HandleFunc("/rep", files("text/html", "rep.html"))
+	http.HandleFunc("/jquery.js", files("application/javascript", "jquery.min.js"))
 	http.HandleFunc("/d3.js", files("application/javascript", "d3.v2.min.js"))
 	http.HandleFunc("/vbmap.js", files("application/javascript", "vbmap.js"))
 
