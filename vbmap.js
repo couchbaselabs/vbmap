@@ -110,6 +110,8 @@ function makeState(w, h, container) {
             .data(partition)
             .enter().append("svg:g");
 
+        vis.data(d3.entries({"all vbuckets": data})).selectAll("g").data(partition).exit().remove();
+
         g.append("svg:path")
             .attr("d", arc)
             .attr("stroke", "#fff")
@@ -131,8 +133,11 @@ function makeState(w, h, container) {
             });
 
         vis.selectAll("g text")
-            .data(partition)
+          .data(partition)
             .text(function(d) { return nodeName(byState, d);})
+            .attr("x", function(d) { return d.y; })
+            .attr("dx", "6") // margin
+            .attr("dy", ".35em") // vertical-align
           .enter().append("text")
             .attr("text-anchor", function(d) { return d.y == 0 ? "middle" : null;})
             .attr("transform", function(d) {
@@ -168,6 +173,8 @@ function makeState(w, h, container) {
                     }
                 };
             });
+
+        vis.selectAll("g text").data(partition).exit().remove();
 
     }
     return update;
@@ -327,7 +334,7 @@ function makeChord(w, h, container) {
                 return d3.interpolate(a, target);
             });
 
-        labels.selectAll("text").text(function(d, i) { return d.label; });
+        labels.selectAll("text").data(groups).text(function(d, i) { return d.label; });
 
         var nodes = svg.select("g.nodes").selectAll("path")
             .data(groups)
