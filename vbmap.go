@@ -79,8 +79,14 @@ func getShortServerList(bucket *couchbase.Bucket, commonSuffixMC string) []strin
 	return rv
 }
 
-func getBucket() *couchbase.Bucket {
-	bucket, err := couchbase.GetBucket(flag.Arg(0), "default", "default")
+func getBucket(req *http.Request) *couchbase.Bucket {
+	req.ParseForm()
+	clusterurl := req.Form.Get("cluster")
+	if clusterurl == "" {
+		clusterurl = flag.Arg(0)
+	}
+	log.Printf("Getting bucket from %v", clusterurl)
+	bucket, err := couchbase.GetBucket(clusterurl, "default", "default")
 	maybefatal(err, "Error getting bucket:  %v", err)
 
 	return bucket
@@ -89,7 +95,7 @@ func getBucket() *couchbase.Bucket {
 func mapHandler(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-type", "application/javascript")
 
-	bucket := getBucket()
+	bucket := getBucket(req)
 	defer bucket.Close()
 
 	commonSuffix := bucket.CommonAddressSuffix()

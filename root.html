@@ -4,7 +4,6 @@
     <script type="text/javascript" src="/jquery.js"></script>
     <script type="text/javascript" src="/d3.js"></script>
     <script type="text/javascript" src="/vbmap.js"></script>
-    <script type="text/javascript" src="/map?name=server_state"></script>
     <style type="text/css">
 #replicas, #cluster {
   float: left;
@@ -29,30 +28,47 @@
   fill: red;
 }
 
+#clusterform {
+  clear: left;
+}
+
     </style>
   </head>
   <body>
     <div id="center">
+      <div id="loading">Loading...</div>
       <div id="cluster"></div>
       <div id="replicas"></div>
+    </div>
+    <div>
+      <form id="clusterform" method="GET" action="/" style="display: none">
+        Cluster: <input id="clusterid" type="text" size="40" name="cluster"/>
+      </form>
     </div>
 <script type="text/javascript">
 
  $(document).ready(function() {
+   var cluster = getClusterParam();
+   $("#clusterid").val(cluster);
+
    var imgdim = Math.round((window.innerWidth / 2) - 20);
 
    var state = makeState(imgdim, imgdim, '#cluster');
    var chord = makeChord(imgdim, imgdim, '#replicas').fill('grey');
-   state(server_state);
-   chord(server_state);
+
+   function updateGraphs(json) {
+     state(json);
+     chord(json);
+     $("#loading").hide();
+   }
+
+   doMapRequest(cluster, updateGraphs, function() {
+      $("#loading").text("Problems initializing data, will keep retrying...");
+   }, function() { $("#clusterform").show(); });
+
    setInterval(function() {
-     d3.json("/map?rand=" + Math.random(), function(json) {
-     if (json != null) {
-       state(json);
-       chord(json);
-     }
-   });
-   }, 5000);
+       doMapRequest(cluster, updateGraphs);
+     }, 5000);
  });
     </script>
   </body>

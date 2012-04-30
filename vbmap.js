@@ -8,6 +8,42 @@ if(!Object.keys) Object.keys = function(o) {
     return ret;
 };
 
+function getClusterParam() {
+    var s = document.location.search.substring(1);
+    var parts = s.split("&");
+    var rv = null;
+    for (var i = 0; i < parts.length; i++) {
+        var kv = parts[i].split('=', 2);
+        if (kv[0] == 'cluster') {
+            rv = unescape(kv[1]);
+            if (!/:/.test(rv)) {
+                rv += ":8091/";
+            }
+            if (!/^http:\/\//.test(rv)) {
+                rv = "http://" + rv;
+            }
+        }
+    }
+    return rv;
+}
+
+function doMapRequest(cluster, fun, errfun, finfun) {
+    var params="rand=" + Math.random();
+    if (cluster) {
+        params += '&cluster=' + cluster;
+    }
+    d3.json("/map?" + params, function(json) {
+        if (json != null) {
+            fun(json);
+        } else if(errfun) {
+            errfun();
+        }
+        if (finfun) {
+            finfun();
+        }
+    });
+}
+
 function makeState(w, h, container) {
 
     function countChildren(d) {
