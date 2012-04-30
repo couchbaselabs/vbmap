@@ -115,19 +115,6 @@ function makeState(w, h, container) {
             .attr("stroke", "#fff")
             .attr('fill', function(d) { return colorize(byState, sstate, d, Object.keys(data));});
 
-        g.append("svg:text")
-            .attr("text-anchor", function(d) { return d.y == 0 ? "middle" : null;})
-            .attr("transform", function(d) {
-                if (d.y == 0) {
-                    return 0;
-                }
-                return "rotate(" + (d.x + d.dx / 2 - Math.PI / 2) / Math.PI * 180 + ")";
-            })
-            .attr("x", function(d) { return d.y; })
-            .attr("dx", "6") // margin
-            .attr("dy", ".35em") // vertical-align
-            .text(function(d) { return nodeName(byState, d);});
-
         vis.selectAll("path")
             .data(partition)
             .attr('fill', function(d) { return colorize(byState, sstate, d, Object.keys(data));})
@@ -143,9 +130,23 @@ function makeState(w, h, container) {
                 return d3.interpolate(a, target);
             });
 
-        vis.selectAll("text")
+        vis.selectAll("g text")
             .data(partition)
-            .text(function(d, i) { return nodeName(byState, d);})
+            .text(function(d) { return nodeName(byState, d);})
+          .enter().append("text")
+            .attr("text-anchor", function(d) { return d.y == 0 ? "middle" : null;})
+            .attr("transform", function(d) {
+                if (d.y == 0) {
+                    return 0;
+                }
+                return "rotate(" + (d.x + d.dx / 2 - Math.PI / 2) / Math.PI * 180 + ")";
+            })
+            .attr("x", function(d) { return d.y; })
+            .attr("dx", "6") // margin
+            .attr("dy", ".35em") // vertical-align
+            .text(function(d) { return nodeName(byState, d);});
+
+        vis.selectAll("g text")
           .transition()
             .duration(1000)
             .attrTween("transform", function(d, i, a) {
@@ -154,7 +155,20 @@ function makeState(w, h, container) {
                     target = 0;
                 }
                 return d3.interpolate(a, target);
+            })
+            .tween("text", function(d) {
+                var target = nodeName(byState, d);
+                var leaf = /^(active|replica|dead|pending)/.test(target);
+                var i = d3.interpolate(this.textContent, nodeName(byState, d));
+                return function(t) {
+                    if (leaf) {
+                        this.textContent = i(t).replace(/\.\d+/, '');
+                    } else {
+                        this.textContent = target;
+                    }
+                };
             });
+
     }
     return update;
 }
