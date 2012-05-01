@@ -8,29 +8,32 @@ if(!Object.keys) Object.keys = function(o) {
     return ret;
 };
 
-function getClusterParam() {
+function getClusterParams() {
     var s = document.location.search.substring(1);
     var parts = s.split("&");
-    var rv = null;
+    var rv = {};
     for (var i = 0; i < parts.length; i++) {
         var kv = parts[i].split('=', 2);
+        rv[kv[0]] = unescape(kv[1]);
         if (kv[0] == 'cluster') {
-            rv = unescape(kv[1]);
-            if (!/:/.test(rv)) {
-                rv += ":8091/";
+            if (!/:/.test(rv[kv[0]])) {
+                rv[kv[0]] += ":8091/";
             }
-            if (!/^http:\/\//.test(rv)) {
-                rv = "http://" + rv;
+            if (!/^http:\/\//.test(rv[kv[0]])) {
+                rv[kv[0]] = "http://" + rv[kv[0]];
             }
         }
     }
     return rv;
 }
 
-function doMapRequest(cluster, fun, errfun, finfun) {
+function doMapRequest(clusterInfo, fun, errfun, finfun) {
     var params="rand=" + Math.random();
-    if (cluster) {
-        params += '&cluster=' + cluster;
+    if (clusterInfo.cluster) {
+        params += '&cluster=' + clusterInfo.cluster;
+    }
+    if (clusterInfo.bucket) {
+        params += '&bucket=' + clusterInfo.bucket;
     }
     d3.json("/map?" + params, function(json) {
         if (json != null) {

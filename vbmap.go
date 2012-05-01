@@ -85,8 +85,12 @@ func getBucket(req *http.Request) *couchbase.Bucket {
 	if clusterurl == "" {
 		clusterurl = flag.Arg(0)
 	}
-	log.Printf("Getting bucket from %v", clusterurl)
-	bucket, err := couchbase.GetBucket(clusterurl, "default", "default")
+	bucketName := req.Form.Get("bucket")
+	if bucketName == "" {
+		bucketName = "default"
+	}
+	log.Printf("Getting bucket %v from %v", bucketName, clusterurl)
+	bucket, err := couchbase.GetBucket(clusterurl, "default", bucketName)
 	maybefatal(err, "Error getting bucket:  %v", err)
 
 	return bucket

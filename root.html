@@ -42,14 +42,17 @@
     </div>
     <div>
       <form id="clusterform" method="GET" action="/" style="display: none">
-        Cluster: <input id="clusterid" type="text" size="40" name="cluster"/>
+        Cluster: <input id="clusterid" type="text" size="40" name="cluster"/><br/>
+        Bucket: <input id="bucketid" type="text" size="20" name="bucket" value="default"/><br/>
+        <input type="submit" value="Go" />
       </form>
     </div>
 <script type="text/javascript">
 
  $(document).ready(function() {
-   var cluster = getClusterParam();
-   $("#clusterid").val(cluster);
+   var clusterInfo = getClusterParams();
+   $("#clusterid").val(clusterInfo.cluster);
+   $("#bucketid").val(clusterInfo.bucket || 'default');
 
    var imgdim = Math.round((window.innerWidth / 2) - 20);
 
@@ -62,12 +65,12 @@
      $("#loading").hide();
    }
 
-   doMapRequest(cluster, updateGraphs, function() {
+   doMapRequest(clusterInfo, updateGraphs, function() {
       $("#loading").text("Problems initializing data, will keep retrying...");
    }, function() { $("#clusterform").show(); });
 
    setInterval(function() {
-       doMapRequest(cluster, updateGraphs);
+       doMapRequest(clusterInfo, updateGraphs);
      }, 5000);
  });
     </script>
