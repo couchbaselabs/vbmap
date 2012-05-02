@@ -8,6 +8,9 @@ if(!Object.keys) Object.keys = function(o) {
     return ret;
 };
 
+// Base URL for all map requests.  Can allow for remote requests.
+var mapRequestBase = "/map";
+
 function getClusterParams() {
     var s = document.location.search.substring(1);
     var parts = s.split("&");
@@ -35,7 +38,7 @@ function doMapRequest(clusterInfo, fun, errfun, finfun) {
     if (clusterInfo.bucket) {
         params += '&bucket=' + clusterInfo.bucket;
     }
-    d3.json("/map?" + params, function(json) {
+    d3.json(mapRequestBase + "?" + params, function(json) {
         if (json != null) {
             fun(json);
         } else if(errfun) {
