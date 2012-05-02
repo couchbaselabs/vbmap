@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"log"
@@ -86,12 +87,25 @@ func getBucket(req *http.Request) *couchbase.Bucket {
 		clusterurl = flag.Arg(0)
 	}
 	bucketName := req.Form.Get("bucket")
+
+	client, err := couchbase.Connect(clusterurl)
+	maybefatal(err, "Error connecting to cluster: %v", err)
+	pool, err := client.GetPool("default")
+	maybefatal(err, "Error getting pool: %v", err)
+	var bucket *couchbase.Bucket
 	if bucketName == "" {
-		bucketName = "default"
+		for n, b := range pool.BucketMap {
+			if bucket != nil {
+				err = errors.New("Too many buckets found.")
+			}
+			bucketName = n
+			bucket = &b
+		}
+	} else {
+		bucket, err = pool.GetBucket(bucketName)
 	}
-	log.Printf("Getting bucket %v from %v", bucketName, clusterurl)
-	bucket, err := couchbase.GetBucket(clusterurl, "default", bucketName)
-	maybefatal(err, "Error getting bucket:  %v", err)
+
+	log.Printf("Got bucket %v from %v", bucketName, clusterurl)
 
 	return bucket
 }
