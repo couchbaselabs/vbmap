@@ -112,6 +112,7 @@ func getBucket(req *http.Request) *couchbase.Bucket {
 
 func mapHandler(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-type", "application/javascript")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	bucket := getBucket(req)
 	defer bucket.Close()
