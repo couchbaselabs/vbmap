@@ -626,6 +626,7 @@ function makeVBThing(w, h, container) {
         // instantly, so I wait up to about 500ms after I stop pointing at things
         // for the motion to resume.
         var resuming = null;
+        var resumingTo = -1;
 
         update.updateSelectionLine = function() {
             if (selectedVB >= 0) {
@@ -693,6 +694,7 @@ function makeVBThing(w, h, container) {
                     clearTimeout(resuming);
                     resuming = null;
                 }
+                resumingTo = Math.max(force.alpha(), resumingTo);
                 force.stop();
                 var textData = ["vb: " + d.vbid,
                                 "primary: " + sstate.server_list[m[0]]];
@@ -718,7 +720,10 @@ function makeVBThing(w, h, container) {
                 tooltip.attr("transform", "translate(" + (evt[0]-8) + "," + (evt[1]-5) + ")");
             })
             .on("mouseout", function() {
-                resuming = setTimeout(force.resume, 500);
+                resuming = setTimeout(function() {
+                    force.alpha(resumingTo);
+                    resumingTo = -1;
+                }, 500);
                 tooltip.attr("visibility", "hidden");
                 update.unselect(false);
             });
