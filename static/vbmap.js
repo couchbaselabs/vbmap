@@ -521,6 +521,7 @@ function makeVBThing(w, h, container) {
     var distance = Math.min(w, h) / 4;
     var positions = [];
     var recentState = [];
+    var manualSelection = false;
 
     force.on("tick", function(e) {
 
@@ -614,15 +615,31 @@ function makeVBThing(w, h, container) {
         // and then resume it when I leave.  However, I don't want it to resume
         // instantly, so I wait up to about 500ms after I stop pointing at things
         // for the motion to resume.
-         var resuming = null;
+        var resuming = null;
+
+        update.select = function(vbid, manual) {
+            if (arguments.length == 1) { manual = true; }
+            if (manual || !manualSelection) {
+                svg.selectAll("g.vbuckets circle")
+                    .filter(function(di) { return di.vbid != vbid; })
+                    .style("opacity", 0.1);
+                manualSelection = manual;
+            }
+        };
+
+        update.unselect = function(manual) {
+            if (arguments.length == 0) { manual = true; }
+            if (manual || !manualSelection) {
+                svg.selectAll("g.vbuckets circle")
+                    .style("opacity", null);
+                manualSelection = manual;
+            }
+        };
 
         circles.enter().append("svg:circle")
             .attr("r", 3)
             .attr("cx", function(d) { return d.x; })
             .attr("cy", function(d) { return d.y; })
-            .attr("class", function(d) {
-                return d.hasReplica ? ('rep' + d.which) : 'noreplica';
-            })
             .on("mouseover", function(d, i) {
                 var m = sstate.repmap[d.vbid];
                 if (resuming != null) {
@@ -646,9 +663,7 @@ function makeVBThing(w, h, container) {
                       .attr("x", 10)
                       .attr("y", function(dd, ii) { return (ii + 2) * 15; })
                       .text(function(dd) {return dd;});
-                svg.selectAll("g.vbuckets circle")
-                    .filter(function(di) { return di.vbid != d.vbid; })
-                    .style("opacity", 0.1);
+                update.select(d.vbid, false);
 
             })
             .on("mousemove", function(d, i) {
@@ -658,8 +673,12 @@ function makeVBThing(w, h, container) {
             .on("mouseout", function() {
                 resuming = setTimeout(force.resume, 500);
                 tooltip.attr("visibility", "hidden");
-                svg.selectAll("g.vbuckets circle")
-                    .style("opacity", null);
+                update.unselect(false);
+            });
+
+        circles.data(vbuckets)
+            .attr("class", function(d) {
+                return d.hasReplica ? ('rep' + d.which) : 'noreplica';
             });
 
         circles.exit().remove();

@@ -9,6 +9,10 @@
   clear: left;
 }
 
+#force {
+  position: relative;
+}
+
 svg g.vbuckets circle {
   opacity: 0.75;
 }
@@ -42,12 +46,25 @@ svg .labels {
   font-size: 24px;
 }
 
+#vbfinder {
+  width: 150px;
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
     </style>
   </head>
   <body>
     <div id="center">
       <div id="loading">Loading...</div>
       <div id="force"></div>
+    </div>
+    <div id="vbfinder">
+      <h1>VBucket Finder</h1>
+      <form id="vbucketfinder" method="GET" action="">
+        VB: <input id="findvb" type="text" size="5" />
+      </form>
     </div>
     <div>
       <form id="clusterform" method="GET" action="/static/vbuckets.html" style="display: none">
@@ -63,10 +80,19 @@ svg .labels {
    $("#clusterid").val(clusterInfo.cluster);
    $("#bucketid").val(clusterInfo.bucket || 'default');
 
-   var imgdim = Math.round(window.innerWidth - 20);
-
-   var forcething = makeVBThing(window.innerWidth - 40,
+   $("#force").attr("width", window.innerWidth - 170);
+   var forcething = makeVBThing(window.innerWidth - 170,
                                 window.innerHeight - 40, '#force');
+
+   $("#vbucketfinder").on("submit", function() {
+      var vb = $("#findvb").val();
+      if (vb === "") {
+        forcething.unselect();
+      } else {
+        forcething.select(vb);
+      }
+      return false;
+    });
 
    function updateGraphs(json) {
      forcething(json);
