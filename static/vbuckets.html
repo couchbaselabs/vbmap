@@ -5,6 +5,14 @@
     <script type="text/javascript" src="/static/d3.v2.min.js"></script>
     <script type="text/javascript" src="/static/vbmap.js"></script>
     <style type="text/css">
+body {
+  font-family: verdana;
+}
+
+h1 {
+  font-size: 120%;
+}
+
 #clusterform {
   clear: left;
 }
@@ -17,21 +25,25 @@ svg g.vbuckets circle {
   opacity: 0.75;
 }
 
-svg g.vbuckets circle.noreplica {
+.noreplica {
   fill: red;
+  color: red;
   opacity: 0.9;
 }
 
-svg g.vbuckets circle.rep0 {
+.rep0 {
   fill: #1B9E77;
+  color: #1B9E77;
 }
 
-svg g.vbuckets circle.rep1 {
+.rep1 {
   fill: #D95F02;
+  color: #D95F02;
 }
 
-svg g.vbuckets circle.rep2 {
+.rep2 {
   fill: #7570B3;
+  color: #7570B3;
 }
 
 svg .tooltip rect {
@@ -65,6 +77,13 @@ svg .labels {
       <form id="vbucketfinder" method="GET" action="">
         VB: <input id="findvb" type="text" size="5" />
       </form>
+      <h1>Legend</h1>
+      <ul>
+        <li class="rep0">Primary</li>
+        <li class="rep1">Rep #1</li>
+        <li class="rep2">Rep #2</li>
+        <li class="noreplica">No Replica</li>
+      </ul>
     </div>
     <div>
       <form id="clusterform" method="GET" action="/static/vbuckets.html" style="display: none">
