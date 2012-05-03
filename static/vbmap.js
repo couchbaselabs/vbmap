@@ -499,6 +499,9 @@ function makeVBThing(w, h, container) {
     svg.append("g")
         .attr("class", "vbuckets");
 
+    svg.append("g")
+        .attr("class", "links");
+
     var tooltip = svg.append("g")
         .attr("class", "tooltip")
         .attr("id", "tooltip")
@@ -522,22 +525,7 @@ function makeVBThing(w, h, container) {
     var positions = [];
     var recentState = [];
     var manualSelection = false;
-
-    force.on("tick", function(e) {
-
-        // Push nodes toward their designated focus.
-        var k = .9 * e.alpha;
-        vbuckets.forEach(function(o, i) {
-            if (recentState[o.vbid][o.which] >= 0) {
-                o.y += (positions[recentState[o.vbid][o.which]].y - o.y) * k;
-                o.x += (positions[recentState[o.vbid][o.which]].x - o.x) * k;
-            }
-        });
-
-        svg.selectAll("circle")
-            .attr("cx", function(d) { return d.x; })
-            .attr("cy", function(d) { return d.y; });
-    });
+    var selectedVB = -1;
 
     var prevj = "";
 
@@ -590,6 +578,24 @@ function makeVBThing(w, h, container) {
             prevj = currentj;
         }
 
+        force.on("tick", function(e) {
+            // Push nodes toward their designated focus.
+            var k = .9 * e.alpha;
+            vbuckets.forEach(function(o, i) {
+                if (recentState[o.vbid][o.which] >= 0) {
+                    o.y += (positions[recentState[o.vbid][o.which]].y - o.y) * k;
+                    o.x += (positions[recentState[o.vbid][o.which]].x - o.x) * k;
+                    if (o.vbid == selectedVB) {
+                        update.updateSelectionLine();
+                    }
+                }
+            });
+
+            svg.selectAll("circle")
+                .attr("cx", function(d) { return d.x; })
+                .attr("cy", function(d) { return d.y; });
+        });
+
         recentState = sstate.repmap;
 
         var labels = svg.select("g.labels").selectAll("text")
@@ -620,13 +626,43 @@ function makeVBThing(w, h, container) {
         // for the motion to resume.
         var resuming = null;
 
+        update.updateSelectionLine = function() {
+            if (selectedVB >= 0) {
+                var primary = null;
+                var participants = [];
+                for (var i = 0; i < vbuckets.length; i++) {
+                    var vb = vbuckets[i];
+                    if (vb.vbid == selectedVB) {
+                        if (vb.which == 0) {
+                            primary = vb;
+                        } else {
+                            participants.push(vb);
+                        }
+                    }
+                }
+                d3.select("g.links").selectAll("line").data(participants)
+                  .enter().append("line")
+                    .attr("stroke", "black");
+
+                d3.select("g.links").selectAll("line").data(participants)
+                    .attr("x1", primary.x)
+                    .attr("y1", primary.y)
+                    .attr("x2", function(d) { return d.x; })
+                    .attr("y2", function(d) { return d.y; });
+            } else {
+                d3.selectAll("g.links line").remove();
+            }
+        };
+
         update.select = function(vbid, manual) {
             if (arguments.length == 1) { manual = true; }
             if (manual || !manualSelection) {
                 svg.selectAll("g.vbuckets circle")
-                    .filter(function(di) { return di.vbid != vbid; })
-                    .style("opacity", 0.1);
+                    .style("opacity", function(di) {
+                        return di.vbid == vbid ? null : 0.1;
+                    });
                 manualSelection = manual;
+                selectedVB = vbid;
             }
         };
 
@@ -636,6 +672,8 @@ function makeVBThing(w, h, container) {
                 svg.selectAll("g.vbuckets circle")
                     .style("opacity", null);
                 manualSelection = manual;
+                selectedVB = -1;
+                update.updateSelectionLine();
             }
         };
 
