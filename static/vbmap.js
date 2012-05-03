@@ -551,6 +551,11 @@ function makeVBThing(w, h, container) {
                 current += angle;
             }
         }
+        // Special case centering when there's only one.
+        if (positions.length == 1) {
+            positions[0].x = 0;
+            positions[0].y = 0;
+        }
 
         // These are vbuckets.
         if (vbuckets.length != (sstate.repmap.length * sstate.repmap[0].length)) {
