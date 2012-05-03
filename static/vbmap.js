@@ -647,31 +647,34 @@ function makeVBThing(w, h, container) {
         var resumingTo = -1;
 
         update.updateSelectionLine = function() {
+            var primary = null;
+            var participants = [];
             if (selectedVB >= 0) {
-                var primary = null;
-                var participants = [];
                 for (var i = 0; i < vbuckets.length; i++) {
                     var vb = vbuckets[i];
                     if (vb.vbid == selectedVB) {
                         if (vb.which == 0) {
                             primary = vb;
-                        } else {
+                        } else if (sstate.repmap[vb.vbid][vb.which] >= 0) {
                             participants.push(vb);
                         }
                     }
                 }
-                d3.select("g.links").selectAll("line").data(participants)
-                  .enter().append("line")
-                    .attr("stroke", "black")
-                    .attr("marker-end", "url(#triangle)");
+            }
+            d3.select("g.links").selectAll("line").data(participants)
+              .enter().append("line")
+                .attr("stroke", "black")
+                .attr("marker-end", "url(#triangle)");
 
+            d3.select("g.links").selectAll("line").data(participants)
+                .exit().remove();
+
+            if (primary) {
                 d3.select("g.links").selectAll("line").data(participants)
                     .attr("x1", primary.x)
                     .attr("y1", primary.y)
                     .attr("x2", function(d) { return d.x; })
                     .attr("y2", function(d) { return d.y; });
-            } else {
-                d3.selectAll("g.links line").remove();
             }
         };
 
