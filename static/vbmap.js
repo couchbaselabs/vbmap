@@ -560,7 +560,8 @@ function makeVBThing(w, h, container) {
         }
 
         // These are vbuckets.
-        if (vbuckets.length != (sstate.repmap.length * sstate.repmap[0].length)) {
+        var currentj = JSON.stringify(sstate.repmap);
+        if (currentj != prevj) {
             if (vbuckets.length > sstate.repmap.length) {
                 vbuckets.length = sstate.repmap.length;
             } else if (vbuckets.length < sstate.repmap.length) {
@@ -570,9 +571,16 @@ function makeVBThing(w, h, container) {
                     }
                 }
             }
-        }
-        var currentj = JSON.stringify(sstate.repmap);
-        if (currentj != prevj) {
+            for (var i = 0; i < vbuckets.length; i++) {
+                var repcount = 0;
+                var vb = vbuckets[i].vbid;
+                for (var j = 1; j < sstate.repmap[vb].length; j++) {
+                    if (sstate.repmap[vb][j] != -1) {
+                        repcount++;
+                    }
+                }
+                vbuckets[i].hasReplica = repcount > 0;
+            }
             force.start();
             prevj = currentj;
         }
@@ -607,7 +615,9 @@ function makeVBThing(w, h, container) {
             .attr("r", 3)
             .attr("cx", function(d) { return d.x; })
             .attr("cy", function(d) { return d.y; })
-            .attr("class", function(d) { return 'rep' + d.which; })
+            .attr("class", function(d) {
+                return d.hasReplica ? ('rep' + d.which) : 'noreplica';
+            })
             .on("mouseover", function(d, i) {
                 var m = sstate.repmap[d.vbid];
                 if (resuming != null) {
