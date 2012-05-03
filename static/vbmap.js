@@ -537,6 +537,8 @@ function makeVBThing(w, h, container) {
             .attr("cy", function(d) { return d.y; });
     });
 
+    var prevj = "";
+
     function update(sstate) {
 
         // These are positions as correlate to nodes.
@@ -569,7 +571,11 @@ function makeVBThing(w, h, container) {
                 }
             }
         }
-        force.start();
+        var currentj = JSON.stringify(sstate.repmap);
+        if (currentj != prevj) {
+            force.start();
+            prevj = currentj;
+        }
 
         recentState = sstate.repmap;
 
