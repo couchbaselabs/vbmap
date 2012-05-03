@@ -488,8 +488,22 @@ function makeVBThing(w, h, container) {
     svg = d3.select(container)
         .append("svg")
         .attr("width", w)
-        .attr("height", h)
-      .append("g")
+        .attr("height", h);
+
+    svg.append("defs")
+      .append("marker")
+        .attr("id", "triangle")
+        .attr("viewBox", "0 0 10 10")
+        .attr("refX", 10)
+        .attr("refY", 5)
+        .attr("markerUnits", "strokeWidth")
+        .attr("markerWidth", 10)
+        .attr("markerHeight", 30)
+        .attr("orient", "auto")
+        .append("path")
+          .attr("d", "M 0 0 L 10 5 L 0 10 z");
+
+    svg = svg.append("g")
         .attr("class", "canvas")
         .attr("transform", "translate(" + w / 2 + "," + h / 2 + ")");
 
@@ -648,7 +662,8 @@ function makeVBThing(w, h, container) {
                 }
                 d3.select("g.links").selectAll("line").data(participants)
                   .enter().append("line")
-                    .attr("stroke", "black");
+                    .attr("stroke", "black")
+                    .attr("marker-end", "url(#triangle)");
 
                 d3.select("g.links").selectAll("line").data(participants)
                     .attr("x1", primary.x)
