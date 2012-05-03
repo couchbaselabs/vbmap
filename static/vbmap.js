@@ -644,7 +644,7 @@ function makeVBThing(w, h, container) {
                 resuming = setTimeout(force.resume, 500);
                 tooltip.attr("visibility", "hidden");
                 svg.selectAll("g.vbuckets circle")
-                    .style("opacity", 1);
+                    .style("opacity", null);
             });
 
         circles.exit().remove();
