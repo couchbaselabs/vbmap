@@ -563,8 +563,8 @@ function makeVBThing(w, h, container) {
                     }
                 }
             }
-            force.start();
         }
+        force.start();
 
         recentState = sstate.repmap;
 
@@ -572,9 +572,10 @@ function makeVBThing(w, h, container) {
             .data(positions);
 
         labels.enter().append("text")
-            .attr("x", function(d) { return d.x; })
+            .text(function(d) { return d.svr; });
+
+        labels.attr("x", function(d) { return d.x; })
             .attr("y", function(d) { return d.y; })
-            .attr("text-anchor", "middle")
             .text(function(d) { return d.svr; });
 
         labels.exit().remove();
