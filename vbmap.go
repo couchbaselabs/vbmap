@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"path/filepath"
 	"strconv"
 
 	"github.com/couchbaselabs/go-couchbase"
@@ -174,17 +175,17 @@ func files(contentType string, paths ...string) handler {
 	}
 }
 
+func doStatic(w http.ResponseWriter, req *http.Request) {
+	http.ServeFile(w, req, filepath.Join(".", req.URL.Path))
+}
+
 func main() {
 	staticPath := flag.Bool("static", false,
 		"Interpret URL as a static path (for testing)")
 	flag.Parse()
 
 	http.HandleFunc("/", files("text/html", "root.html"))
-	http.HandleFunc("/custom", files("text/html", "custom.html"))
-	http.HandleFunc("/rep", files("text/html", "rep.html"))
-	http.HandleFunc("/jquery.js", files("application/javascript", "jquery.min.js"))
-	http.HandleFunc("/d3.js", files("application/javascript", "d3.v2.min.js"))
-	http.HandleFunc("/vbmap.js", files("application/javascript", "vbmap.js"))
+	http.HandleFunc("/static/", doStatic)
 
 	if *staticPath {
 		http.HandleFunc("/map", files("application/javascript", flag.Args()...))
