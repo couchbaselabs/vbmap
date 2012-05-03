@@ -481,3 +481,159 @@ function makeChord(w, h, container) {
 
     return chordrv;
 }
+
+function makeVBThing(w, h, container) {
+    var svg = d3.select(container + " svg g.canvas");
+    svg = d3.select(container)
+        .append("svg")
+        .attr("width", w)
+        .attr("height", h)
+      .append("g")
+        .attr("class", "canvas")
+        .attr("transform", "translate(" + w / 2 + "," + h / 2 + ")");
+
+    svg.append("g")
+        .attr("class", "labels");
+
+    svg.append("g")
+        .attr("class", "vbuckets");
+
+    var tooltip = svg.append("g")
+        .attr("class", "tooltip")
+        .attr("id", "tooltip")
+        .attr("visibility", "hidden");
+
+    tooltip.append("rect")
+        .attr("rx", 20)
+        .attr("ry", 20)
+        .attr("width", 200)
+        .attr("height", 100);
+
+    var vbuckets = [];
+
+    var force = d3.layout.force()
+        .nodes(vbuckets)
+        .links([])
+        .gravity(0)
+        .size([w, h]);
+
+    var distance = Math.min(w, h) / 4;
+    var positions = [];
+    var recentState = [];
+
+    force.on("tick", function(e) {
+
+        // Push nodes toward their designated focus.
+        var k = .9 * e.alpha;
+        vbuckets.forEach(function(o, i) {
+            if (recentState[o.vbid][o.which] >= 0) {
+                o.y += (positions[recentState[o.vbid][o.which]].y - o.y) * k;
+                o.x += (positions[recentState[o.vbid][o.which]].x - o.x) * k;
+            }
+        });
+
+        svg.selectAll("circle")
+            .attr("cx", function(d) { return d.x; })
+            .attr("cy", function(d) { return d.y; });
+    });
+
+    function update(sstate) {
+
+        // These are positions as correlate to nodes.
+        if (positions.length != sstate.server_list.length) {
+            positions.length = 0;
+            var angle = (Math.PI * 2) / sstate.server_list.length;
+            var current = angle;
+            for (var i = 0; i < sstate.server_list.length; i++) {
+                var x = distance * Math.cos(current),
+                    y = distance * Math.sin(current);
+                positions.push({x: x, y: y, svr: sstate.server_list[i]});
+                current += angle;
+            }
+        }
+
+        // These are vbuckets.
+        if (vbuckets.length != (sstate.repmap.length * sstate.repmap[0].length)) {
+            if (vbuckets.length > sstate.repmap.length) {
+                vbuckets.length = sstate.repmap.length;
+            } else if (vbuckets.length < sstate.repmap.length) {
+                for (var i = vbuckets.length; i < sstate.repmap.length; i++) {
+                    for (var j = 0; j < sstate.repmap[i].length; j++) {
+                        vbuckets.push({vbid: i, which: j});
+                    }
+                }
+            }
+            force.start();
+        }
+
+        recentState = sstate.repmap;
+
+        var labels = svg.select("g.labels").selectAll("text")
+            .data(positions);
+
+        labels.enter().append("text")
+            .attr("x", function(d) { return d.x; })
+            .attr("y", function(d) { return d.y; })
+            .attr("text-anchor", "middle")
+            .text(function(d) { return d.svr; });
+
+        var circles = svg.select("g.vbuckets").selectAll("circle")
+            .data(vbuckets);
+
+        // I don't want to use standard force drag because the cursor has a
+        // bit of repulsion so it chases around the vbuckets a bit while
+        // I'm trying to point at them.  Instead, I just pause the force simulation
+        // and then resume it when I leave.  However, I don't want it to resume
+        // instantly, so I wait up to about 500ms after I stop pointing at things
+        // for the motion to resume.
+         var resuming = null;
+
+        circles.enter().append("svg:circle")
+            .attr("r", 3)
+            .attr("cx", function(d) { return d.x; })
+            .attr("cy", function(d) { return d.y; })
+            .attr("class", function(d) { return 'rep' + d.which; })
+            .on("mouseover", function(d, i) {
+                var m = sstate.repmap[d.vbid];
+                if (resuming != null) {
+                    clearTimeout(resuming);
+                    resuming = null;
+                }
+                force.stop();
+                var textData = ["vb: " + d.vbid,
+                                "primary: " + sstate.server_list[m[0]]];
+                for (var j = 1; j < m.length; j++) {
+                    if (m[j] >= 0) {
+                        textData.push(" rep #" + j + ": " +
+                                      sstate.server_list[m[j]]);
+                    }
+                }
+                tooltip.attr("visibility", "visible");
+                tooltip.selectAll("text").remove();
+                    tooltip.selectAll("text")
+                    .data(textData)
+                    .enter().append("text")
+                      .attr("x", 10)
+                      .attr("y", function(dd, ii) { return (ii + 2) * 15; })
+                      .text(function(dd) {return dd;});
+                svg.selectAll("g.vbuckets circle")
+                    .filter(function(di) { return di.vbid != d.vbid; })
+                    .style("opacity", 0.1);
+
+            })
+            .on("mousemove", function(d, i) {
+                var evt = d3.mouse(this);
+                tooltip.attr("transform", "translate(" + (evt[0]-8) + "," + (evt[1]-5) + ")");
+            })
+            .on("mouseout", function() {
+                resuming = setTimeout(force.resume, 500);
+                tooltip.attr("visibility", "hidden");
+                svg.selectAll("g.vbuckets circle")
+                    .style("opacity", 1);
+            });
+
+        circles.exit().remove();
+    }
+
+    return update;
+}
