@@ -361,7 +361,6 @@ function makeChord(w, h, container) {
                     + "translate(" + r1 + ",0)";
             })
           .append("text")
-            .text(function(d, i) { return d.label; })
             .attr("text-anchor", "middle")
             .attr("transform", "rotate(90) translate(0, 20)");
 
@@ -376,7 +375,9 @@ function makeChord(w, h, container) {
                 return d3.interpolate(a, target);
             });
 
-        labels.selectAll("text").data(groups).text(function(d, i) { return d.label; });
+        svg.select("g.labels").selectAll("text")
+            .data(groups)
+            .text(function(d) { return d.label; });
 
         var nodes = svg.select("g.nodes").selectAll("path")
             .data(groups)
