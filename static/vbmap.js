@@ -564,25 +564,28 @@ function makeVBThing(w, h, container) {
         // These are vbuckets.
         var currentj = JSON.stringify(sstate.repmap);
         if (currentj != prevj) {
-            if (vbuckets.length > sstate.repmap.length) {
-                vbuckets.length = sstate.repmap.length;
-            } else if (vbuckets.length < sstate.repmap.length) {
-                for (var i = vbuckets.length; i < sstate.repmap.length; i++) {
-                    for (var j = 0; j < sstate.repmap[i].length; j++) {
-                        vbuckets.push({vbid: i, which: j});
-                    }
-                }
-            }
+            var vbucketMap = {};
             for (var i = 0; i < vbuckets.length; i++) {
-                var repcount = 0;
-                var vb = vbuckets[i].vbid;
-                for (var j = 1; j < sstate.repmap[vb].length; j++) {
-                    if (sstate.repmap[vb][j] != -1) {
-                        repcount++;
-                    }
-                }
-                vbuckets[i].hasReplica = repcount > 0;
+                var vb = vbuckets[i];
+                vbucketMap[vb.vbid + "." + vb.which] = vb;
             }
+            vbuckets.length = 0;
+            for (var i = 0; i < sstate.repmap.length; i++) {
+                for (var j = 0; j < sstate.repmap[i].length; j++) {
+                    var k = i + "." + j;
+                    var vb = vbucketMap[k] || { vbid: i, which: j };
+                    var repcount = 0;
+
+                    for (var j2 = 1; j2 < sstate.repmap[i].length; j2++) {
+                        if (sstate.repmap[i][j2] != -1) {
+                            repcount++;
+                        }
+                    }
+                    vb.hasReplica = repcount > 0;
+                    vbuckets.push(vb);
+                }
+            }
+
             force.start();
             prevj = currentj;
         }
