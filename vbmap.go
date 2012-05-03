@@ -185,6 +185,9 @@ func main() {
 	flag.Parse()
 
 	http.HandleFunc("/", files("text/html", "root.html"))
+	http.HandleFunc("/custom", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/static/custom.html", http.StatusMovedPermanently)
+	})
 	http.HandleFunc("/static/", doStatic)
 
 	if *staticPath {
