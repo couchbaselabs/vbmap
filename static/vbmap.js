@@ -583,18 +583,22 @@ function makeVBThing(w, h, container) {
             // Push nodes toward their designated focus.
             var k = .9 * e.alpha;
             vbuckets.forEach(function(o, i) {
-                if (recentState[o.vbid][o.which] >= 0) {
-                    o.y += (positions[recentState[o.vbid][o.which]].y - o.y) * k;
-                    o.x += (positions[recentState[o.vbid][o.which]].x - o.x) * k;
-                    if (o.vbid == selectedVB) {
-                        update.updateSelectionLine();
-                    }
+                var sid =recentState[o.vbid][o.which];
+                var gpoint = sid >= 0 ? positions[sid] : null;
+                if (gpoint) {
+                    o.y += (gpoint.y - o.y) * k;
+                    o.x += (gpoint.x - o.x) * k;
                 }
             });
 
             svg.selectAll("circle")
                 .attr("cx", function(d) { return d.x; })
-                .attr("cy", function(d) { return d.y; });
+                .attr("cy", function(d) { return d.y; })
+                .each(function(d) {
+                    if (d.vbid == selectedVB) {
+                        update.updateSelectionLine();
+                    }
+                });
         });
 
         recentState = sstate.repmap;
