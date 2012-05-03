@@ -1,35 +1,36 @@
 <html>
   <head>
-    <title>Cluster VBucket Distribution</title>
+    <title>Cluster VBucket Map</title>
     <script type="text/javascript" src="/static/jquery.min.js"></script>
     <script type="text/javascript" src="/static/d3.v2.min.js"></script>
     <script type="text/javascript" src="/static/vbmap.js"></script>
     <style type="text/css">
-#replicas, #cluster {
-  float: left;
-  font: 10px sans-serif;
-}
-
-.chord path {
-  fill-opacity: .67;
-  stroke: #000;
-  stroke-width: .5px;
-}
-
-.nodes {
-  stroke: black;
-}
-
-.nodes path {
-  fill: grey;
-}
-
-.nodes path.bad {
-  fill: red;
-}
-
 #clusterform {
   clear: left;
+}
+
+svg circle.rep0 {
+  fill: #1B9E77;
+}
+
+svg circle.rep1 {
+  fill: #D95F02;
+}
+
+svg circle.rep2 {
+  fill: #7570B3;
+}
+
+svg .tooltip rect {
+  fill: #ff9;
+  stroke: #993;
+  stroke-width: 5;
+  opacity: 0.5;
+}
+
+svg .labels {
+  fill: #444;
+  font-size: 24px;
 }
 
     </style>
@@ -37,8 +38,7 @@
   <body>
     <div id="center">
       <div id="loading">Loading...</div>
-      <div id="cluster"></div>
-      <div id="replicas"></div>
+      <div id="force"></div>
     </div>
     <div>
       <form id="clusterform" method="GET" action="/" style="display: none">
@@ -54,14 +54,13 @@
    $("#clusterid").val(clusterInfo.cluster);
    $("#bucketid").val(clusterInfo.bucket || 'default');
 
-   var imgdim = Math.round((window.innerWidth / 2) - 20);
+   var imgdim = Math.round(window.innerWidth - 20);
 
-   var state = makeState(imgdim, imgdim, '#cluster');
-   var chord = makeChord(imgdim, imgdim, '#replicas').fill('grey');
+   var forcething = makeVBThing(window.innerWidth - 40,
+                                window.innerHeight - 40, '#force');
 
    function updateGraphs(json) {
-     state(json);
-     chord(json);
+     forcething(json);
      $("#loading").hide();
    }
 
