@@ -175,10 +175,6 @@ func files(contentType string, paths ...string) handler {
 	}
 }
 
-func doStatic(w http.ResponseWriter, req *http.Request) {
-	http.ServeFile(w, req, filepath.Join(".", req.URL.Path))
-}
-
 func main() {
 	staticPath := flag.Bool("static", false,
 		"Interpret URL as a static path (for testing)")
@@ -188,7 +184,9 @@ func main() {
 	http.HandleFunc("/custom", func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/static/custom.html", http.StatusMovedPermanently)
 	})
-	http.HandleFunc("/static/", doStatic)
+	http.HandleFunc("/static/", func(w http.ResponseWriter, req *http.Request) {
+		http.ServeFile(w, req, filepath.Join(".", req.URL.Path))
+	})
 
 	if *staticPath {
 		http.HandleFunc("/map", files("application/javascript", flag.Args()...))
