@@ -522,6 +522,7 @@ function makeVBThing(w, h, container) {
         .size([w, h]);
 
     var distance = Math.min(w, h) / 4;
+    var vbucketRadius = 3;
     var positions = [];
     var recentState = [];
     var manualSelection = false;
@@ -658,11 +659,15 @@ function makeVBThing(w, h, container) {
             if (arguments.length == 1) { manual = true; }
             if (manual || !manualSelection) {
                 svg.selectAll("g.vbuckets circle")
+                    .attr("r", function(di) {
+                        return di.vbid == vbid ? vbucketRadius * 2 : vbucketRadius;
+                    })
                     .style("opacity", function(di) {
                         return di.vbid == vbid ? null : 0.1;
                     });
                 manualSelection = manual;
                 selectedVB = vbid;
+                update.updateSelectionLine();
             }
         };
 
@@ -670,6 +675,7 @@ function makeVBThing(w, h, container) {
             if (arguments.length == 0) { manual = true; }
             if (manual || !manualSelection) {
                 svg.selectAll("g.vbuckets circle")
+                    .attr("r", vbucketRadius)
                     .style("opacity", null);
                 manualSelection = manual;
                 selectedVB = -1;
@@ -678,7 +684,7 @@ function makeVBThing(w, h, container) {
         };
 
         circles.enter().append("svg:circle")
-            .attr("r", 3)
+            .attr("r", vbucketRadius)
             .attr("cx", function(d) { return d.x; })
             .attr("cy", function(d) { return d.y; })
             .on("mouseover", function(d, i) {
