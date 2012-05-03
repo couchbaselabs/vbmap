@@ -739,7 +739,7 @@ function makeVBThing(w, h, container) {
             })
             .on("mousemove", function(d, i) {
                 var evt = d3.mouse(this);
-                tooltip.attr("transform", "translate(" + (evt[0]-8) + "," + (evt[1]-5) + ")");
+                tooltip.attr("transform", "translate(" + evt[0] + "," + evt[1] + ")");
             })
             .on("mouseout", function() {
                 resuming = setTimeout(function() {
