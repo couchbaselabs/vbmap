@@ -577,6 +577,7 @@ function makeVBThing(w, h, container) {
             .data(positions);
 
         labels.enter().append("text")
+            .attr("text-anchor", "middle")
             .text(function(d) { return d.svr; });
 
         labels.attr("x", function(d) { return d.x; })
