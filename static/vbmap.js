@@ -577,6 +577,8 @@ function makeVBThing(w, h, container) {
             .attr("text-anchor", "middle")
             .text(function(d) { return d.svr; });
 
+        labels.exit().remove();
+
         var circles = svg.select("g.vbuckets").selectAll("circle")
             .data(vbuckets);
 
