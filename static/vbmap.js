@@ -550,7 +550,7 @@ function makeVBThing(w, h, container) {
             for (var i = 0; i < sstate.server_list.length; i++) {
                 var x = distance * Math.cos(current),
                     y = distance * Math.sin(current);
-                positions.push({x: x, y: y, svr: sstate.server_list[i]});
+                positions.push({x: x, y: y});
                 current += angle;
             }
         }
@@ -592,12 +592,16 @@ function makeVBThing(w, h, container) {
             .data(positions);
 
         labels.enter().append("text")
-            .attr("text-anchor", "middle")
-            .text(function(d) { return d.svr; });
+            .attr("x", 0)
+            .attr("y", 0)
+            .attr("text-anchor", "middle");
 
-        labels.attr("x", function(d) { return d.x; })
-            .attr("y", function(d) { return d.y; })
-            .text(function(d) { return d.svr; });
+        labels.text(function(d, i) { return sstate.server_list[i]; });
+
+        labels.transition()
+            .duration(1000)
+            .attr("x", function(d) { return d.x; })
+            .attr("y", function(d) { return d.y; });
 
         labels.exit().remove();
 
