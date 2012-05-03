@@ -538,13 +538,14 @@ function makeVBThing(w, h, container) {
     var distance = Math.min(w, h) / 4;
     var vbucketRadius = 3;
     var positions = [];
-    var recentState = [];
     var manualSelection = false;
     var selectedVB = -1;
 
     var prevj = "";
 
     function update(sstate) {
+
+        var somethingChanged = false;
 
         // These are positions as correlate to nodes.
         if (positions.length != sstate.server_list.length) {
@@ -557,6 +558,7 @@ function makeVBThing(w, h, container) {
                 positions.push({x: x, y: y});
                 current += angle;
             }
+            somethingChanged = true;
         }
         // Special case centering when there's only one.
         if (positions.length == 1) {
@@ -589,7 +591,7 @@ function makeVBThing(w, h, container) {
                 }
             }
 
-            force.start();
+            somethingChanged = true;
             prevj = currentj;
         }
 
@@ -597,7 +599,7 @@ function makeVBThing(w, h, container) {
             // Push nodes toward their designated focus.
             var k = .9 * e.alpha;
             vbuckets.forEach(function(o, i) {
-                var sid =recentState[o.vbid][o.which];
+                var sid = sstate.repmap[o.vbid][o.which];
                 var gpoint = sid >= 0 ? positions[sid] : null;
                 if (gpoint) {
                     o.y += (gpoint.y - o.y) * k;
@@ -615,7 +617,9 @@ function makeVBThing(w, h, container) {
                 });
         });
 
-        recentState = sstate.repmap;
+        if (somethingChanged) {
+            force.start();
+        }
 
         var labels = svg.select("g.labels").selectAll("text")
             .data(positions);
