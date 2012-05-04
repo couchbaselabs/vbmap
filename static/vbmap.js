@@ -635,6 +635,12 @@ function makeVBThing(w, h, container) {
                 if (gpoint) {
                     o.y += (gpoint.y - o.y) * k;
                     o.x += (gpoint.x - o.x) * k;
+                } else {
+                    // Keep non-displayed nodes from floating away forever.
+                    if (Math.abs(o.x) > w || Math.abs(o.y) > h) {
+                        o.x = o.px;
+                        o.y = o.py;
+                    }
                 }
             });
 
