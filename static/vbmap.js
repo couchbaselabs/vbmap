@@ -162,7 +162,13 @@ function makeState(w, h, container) {
         var partition = d3.layout.partition()
             .sort(null)
             .size([2 * Math.PI, r])
-            .children(function(d) { return isNaN(d.value) ? d3.entries(d.value) : null; })
+            .children(function(d) {
+                var rv = isNaN(d.value) ? d3.entries(d.value) : null;
+                if (rv) {
+                    rv.sort(function(a, b) { return d3.ascending(a.key, b.key); });
+                }
+                return rv;
+            })
             .value(function(d) { return d.value; });
 
         var arc = d3.svg.arc()
