@@ -30,6 +30,28 @@ function getClusterParams() {
     return rv;
 }
 
+function computeNodeMap(vbmap, nodenames) {
+    var rv = { };
+    for (var vbnum = 0; vbnum < vbmap.length; vbnum++) {
+        var state = "active";
+        var nodes = vbmap[vbnum];
+        for (var i = 0; i < nodes.length; i++) {
+            var position = nodes[i];
+            if (position >= 0) {
+                var serverdata = rv[nodenames[position]];
+                if (!serverdata) {
+                    rv[nodenames[position]] = { };
+                }
+                var prev = rv[nodenames[position]][state] || [];
+                prev.push(vbnum);
+                rv[nodenames[position]][state] = prev;
+            }
+            state = "replica";
+        }
+    }
+    return rv;
+}
+
 function doMapRequest(clusterInfo, fun, errfun, finfun) {
     var params="rand=" + Math.random();
     if (clusterInfo.cluster) {
@@ -40,6 +62,9 @@ function doMapRequest(clusterInfo, fun, errfun, finfun) {
     }
     d3.json(mapRequestBase + "?" + params, function(json) {
         if (json != null) {
+            if (! ('vbmap' in json)) {
+                json.vbmap = computeNodeMap(json.repmap, json.server_list);
+            }
             fun(json);
         } else if(errfun) {
             errfun();
