@@ -40,31 +40,6 @@ func getVbMapsMC(bucket *couchbase.Bucket, commonSuffixMC string) map[string]vbm
 	return rv
 }
 
-func getVbMaps(bucket *couchbase.Bucket, commonSuffixCB string) map[string]vbmap {
-	rv := map[string]vbmap{}
-	nodenames := []string{}
-	for _, node := range bucket.VBucketServerMap.ServerList {
-		name := couchbase.CleanupHost(node, commonSuffixCB)
-		nodenames = append(nodenames, name)
-		rv[name] = vbmap{}
-	}
-	for vbnum, nodes := range bucket.VBucketServerMap.VBucketMap {
-		state := "active"
-		for _, position := range nodes {
-			if position >= 0 {
-				prev, ok := rv[nodenames[position]][state]
-				if !ok {
-					prev = []uint16{}
-				}
-				rv[nodenames[position]][state] = append(prev,
-					uint16(vbnum))
-			}
-			state = "replica"
-		}
-	}
-	return rv
-}
-
 func getServerStates(bucket *couchbase.Bucket, commonSuffixMC string) map[string]string {
 	rv := make(map[string]string)
 	for _, node := range bucket.Nodes {
@@ -125,7 +100,6 @@ func mapHandler(w http.ResponseWriter, req *http.Request) {
 	var_name := req.FormValue("name")
 
 	rv := map[string]interface{}{}
-	rv["vbmap"] = getVbMaps(bucket, commonSuffixMC)
 	// rv["mc_vbmap"] = getVbMapsMC(bucket, commonSuffixMC)
 	rv["server_list"] = getShortServerList(bucket, commonSuffixMC)
 	rv["repmap"] = bucket.VBucketServerMap.VBucketMap

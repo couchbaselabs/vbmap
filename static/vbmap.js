@@ -62,9 +62,7 @@ function doMapRequest(clusterInfo, fun, errfun, finfun) {
     }
     d3.json(mapRequestBase + "?" + params, function(json) {
         if (json != null) {
-            if (! ('vbmap' in json)) {
-                json.vbmap = computeNodeMap(json.repmap, json.server_list);
-            }
+            json.vbmap = computeNodeMap(json.repmap, json.server_list);
             fun(json);
         } else if(errfun) {
             errfun();
