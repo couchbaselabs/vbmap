@@ -78,6 +78,12 @@ svg g.links {
   right: 0;
 }
 
+#vbfinder ul.legend {
+  padding: 0;
+  margin: 0;
+  font-size: smaller;
+}
+
     </style>
   </head>
   <body>
@@ -91,11 +97,11 @@ svg g.links {
         VB: <input id="findvb" type="text" size="5" />
       </form>
       <h1>Legend</h1>
-      <ul>
-        <li class="rep0">Primary</li>
-        <li class="rep1">Rep #1</li>
-        <li class="rep2">Rep #2</li>
-        <li class="noreplica">No Replica</li>
+      <ul class="legend">
+        <li class="rep0">Primary (<span id="numrep0">0</span>)</li>
+        <li class="rep1">Rep #1 (<span id="numrep1">0</span>)</li>
+        <li class="rep2">Rep #2 (<span id="numrep2">0</span>)</li>
+        <li class="noreplica">No Replica (<span id="numnorep">0</span>)</li>
       </ul>
     </div>
     <div>
@@ -128,6 +134,26 @@ svg g.links {
 
    function updateGraphs(json) {
      forcething(json);
+     var ids = ['#numnorep', '#numrep0', '#numrep1', '#numrep2'];
+     var counts = [0, 0, 0, 0];
+     for (var i = 0; i < json.repmap.length; i++) {
+       var rmi = json.repmap[i];
+       var hasRep = false;
+       for (var j = 0; j < rmi.length; j++) {
+         if (rmi[j] >= 0) {
+           counts[j+1]++;
+           if (j > 0) {
+             hasRep = true;
+           }
+         }
+       }
+       if (!hasRep) {
+         counts[0]++;
+       }
+     }
+     for (var i = 0; i < counts.length; i++) {
+       $(ids[i]).text(counts[i]);
+     }
      $("#loading").hide();
    }
 
