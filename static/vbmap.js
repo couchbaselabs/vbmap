@@ -749,6 +749,23 @@ function makeVBThing(w, h, container) {
             .attr("r", vbucketRadius)
             .attr("cx", function(d) { return d.x; })
             .attr("cy", function(d) { return d.y; })
+            .on("mousemove", function(d, i) {
+                var evt = d3.mouse(this);
+                tooltip.attr("transform", "translate(" + evt[0] + "," + evt[1] + ")");
+            })
+            .on("mouseout", function() {
+                resuming = setTimeout(function() {
+                    force.alpha(resumingTo);
+                    resumingTo = -1;
+                }, 500);
+                tooltip.attr("visibility", "hidden");
+                update.unselect(false);
+            });
+
+        circles.data(vbuckets)
+            .attr("class", function(d) {
+                return d.hasReplica ? ('rep' + d.which) : 'noreplica';
+            })
             .on("mouseover", function(d, i) {
                 var m = sstate.repmap[d.vbid];
                 if (resuming != null) {
@@ -767,31 +784,13 @@ function makeVBThing(w, h, container) {
                 }
                 tooltip.attr("visibility", "visible");
                 tooltip.selectAll("text").remove();
-                    tooltip.selectAll("text")
+                tooltip.selectAll("text")
                     .data(textData)
                     .enter().append("text")
-                      .attr("x", 10)
-                      .attr("y", function(dd, ii) { return (ii + 2) * 15; })
-                      .text(function(dd) {return dd;});
+                    .attr("x", 10)
+                    .attr("y", function(dd, ii) { return (ii + 2) * 15; })
+                    .text(function(dd) {return dd;});
                 update.select(d.vbid, false);
-
-            })
-            .on("mousemove", function(d, i) {
-                var evt = d3.mouse(this);
-                tooltip.attr("transform", "translate(" + evt[0] + "," + evt[1] + ")");
-            })
-            .on("mouseout", function() {
-                resuming = setTimeout(function() {
-                    force.alpha(resumingTo);
-                    resumingTo = -1;
-                }, 500);
-                tooltip.attr("visibility", "hidden");
-                update.unselect(false);
-            });
-
-        circles.data(vbuckets)
-            .attr("class", function(d) {
-                return d.hasReplica ? ('rep' + d.which) : 'noreplica';
             });
 
         circles.exit().remove();
