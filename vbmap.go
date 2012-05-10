@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"path/filepath"
 	"strconv"
 
 	"github.com/couchbaselabs/go-couchbase"
@@ -158,9 +157,7 @@ func main() {
 	http.HandleFunc("/custom", func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/static/custom.html", http.StatusMovedPermanently)
 	})
-	http.HandleFunc("/static/", func(w http.ResponseWriter, req *http.Request) {
-		http.ServeFile(w, req, filepath.Join(".", req.URL.Path))
-	})
+	http.Handle("/static/", http.FileServer(http.Dir(".")))
 
 	if *staticPath {
 		http.HandleFunc("/map", files("application/javascript", flag.Args()...))
