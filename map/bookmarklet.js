@@ -81,6 +81,10 @@ function initialize() {
     }
 
     fetchData(updateGraphs);
+
+    setInterval(function() {
+        fetchData(updateGraphs);
+    }, 2000);
 }
 
 InjectionController.onConnected = initialize;
