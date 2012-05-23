@@ -7,6 +7,8 @@
   color: white;
 }
 </style>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"
+        type="text/javascript"></script>
 </head>
 <body>
   <p>
@@ -18,4 +20,7 @@
     </li>
   </ul>
 </body>
+<script type="text/javascript">
+  $(".bookmarklets li a").click(function() { alert("You're supposed to drag it."); return false;});
+</script>
 </html>
