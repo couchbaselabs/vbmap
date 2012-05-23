@@ -1,0 +1,21 @@
+<html>
+<head>
+<title>Bookmarklets for Visualisations</title>
+<style type="text/css">
+.bookmarklets li a {
+  background: #090;
+  color: white;
+}
+</style>
+</head>
+<body>
+  <p>
+    Drag these onto your bookmark toolbar.
+  </p>
+  <ul class="bookmarklets">
+    <li>
+      <a href="javascript:(function(d,url,injectURL,f,s,n){n=Date.parse(Date());f=f?f:window.open(url+'?v='+n,url,'');s=d.createElement('SCRIPT');s.setAttribute('src',injectURL+'?'+n);s.onload=function(){injectIntoMembase(url,f);};d.body.appendChild(s);})(document,'http://couchbaselabs.github.com/vbmap/map/bookmarklet.html','https://raw.github.com/alk/membase-vbucket-vis/gh-pages/inject.js',window.reinjectThis);">Vbucket Map</a>
+    </li>
+  </ul>
+</body>
+</html>
