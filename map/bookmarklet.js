@@ -37,8 +37,6 @@ function fetchData(fun, errfun, finfun) {
 }
 
 function initialize() {
-    $("#status-box").innerHTML = "almost ready!";
-
     $("#clusterid").val(clusterInfo.cluster);
     $("#bucketid").val(clusterInfo.bucket || 'default');
 
@@ -83,9 +81,6 @@ function initialize() {
     }
 
     fetchData(updateGraphs);
-
-    $("#status-box").innertHTML = "initialized";
-    $("#status-box").hide();
 }
 
 InjectionController.onConnected = initialize;

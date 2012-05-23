@@ -14,7 +14,6 @@
         type="text/javascript"></script>
 </head>
 <body>
-<p id="status-box"></p>
 <div id="center">
   <div id="loading">Loading...</div>
   <div id="force"></div>
@@ -40,15 +39,6 @@
     <input type="submit" value="Go" />
   </form>
 </div>
-<script>
-(function (statusBox) {
-  if (!window.opener) {
-    statusBox.innerHTML = "This needs to be opened via special bookmarklet";
-  } else {
-    statusBox.innerHTML = "Waiting initial message from membase tab/window....";
-  }
-})(document.getElementById("status-box"));
-</script>
 </body>
 <script src="bookmarklet.js"></script>
 </html>
