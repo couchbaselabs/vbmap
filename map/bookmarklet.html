@@ -1,0 +1,54 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<link rel="stylesheet" type="text/css" href="bookmarklet.css"/>
+<title>VBuckets visualization</title>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"
+        type="text/javascript"></script>
+<script src="http://d3js.org/d3.v2.js" type="text/javascript"></script>
+<script src="https://raw.github.com/alk/membase-vbucket-vis/gh-pages/js/inject-controller.js"
+        type="text/javascript"></script>
+<script src="https://raw.github.com/alk/membase-vbucket-vis/gh-pages/inject.js"></script>
+<script src="https://raw.github.com/couchbaselabs/vbmap/master/static/vbmap.js"
+        type="text/javascript"></script>
+</head>
+<body>
+<p id="status-box"></p>
+<div id="center">
+  <div id="loading">Loading...</div>
+  <div id="force"></div>
+</div>
+<div id="vbfinder">
+  <h1>VBucket Finder</h1>
+  <form id="vbucketfinder" method="GET" action="">
+    VB: <input id="findvb" type="text" size="5" />
+  </form>
+  <h1>Legend</h1>
+  <ul class="legend">
+    <li class="rep0">Primary (<span id="numrep0">0</span>)</li>
+    <li class="rep1">Rep #1 (<span id="numrep1">0</span>)</li>
+    <li class="rep2">Rep #2 (<span id="numrep2">0</span>)</li>
+    <li class="rep3">Rep #3 (<span id="numrep3">0</span>)</li>
+    <li class="noreplica">No Replica (<span id="numnorep">0</span>)</li>
+  </ul>
+</div>
+<div>
+  <form id="clusterform" method="GET" action="/static/vbuckets.html" style="display: none">
+    Cluster: <input id="clusterid" type="text" size="40" name="cluster"/><br/>
+    Bucket: <input id="bucketid" type="text" size="20" name="bucket" value="default"/><br/>
+    <input type="submit" value="Go" />
+  </form>
+</div>
+<script>
+(function (statusBox) {
+  if (!window.opener) {
+    statusBox.innerHTML = "This needs to be opened via special bookmarklet";
+  } else {
+    statusBox.innerHTML = "Waiting initial message from membase tab/window....";
+  }
+})(document.getElementById("status-box"));
+</script>
+</body>
+<script src="bookmarklet.js"></script>
+</html>

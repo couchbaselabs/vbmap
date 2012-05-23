@@ -1,0 +1,89 @@
+body {
+  font-family: verdana;
+  background: white;
+  color: black;
+}
+
+h1 {
+  font-size: 120%;
+}
+
+#clusterform {
+  clear: left;
+}
+
+#force {
+  position: relative;
+}
+
+svg g.vbuckets circle {
+  opacity: 0.75;
+}
+
+.noreplica {
+  fill: red;
+  color: red;
+  opacity: 0.9;
+}
+
+.rep0 {
+  fill: #2ca02c;
+  color: #2ca02c;
+}
+
+.rep1 {
+  fill: #ff7f0e;
+  color: #ff7f0e;
+}
+
+.rep2 {
+  fill: #1f77b4;
+  color: #1f77b4;
+}
+
+.rep3 {
+  fill: #9467bd;
+  color: #9467bd;
+}
+
+.rep4 {
+  fill: #bcbd22;
+  color: #bcbd22;
+}
+
+svg g.tooltip {
+  pointer-events: none;
+}
+
+svg g.tooltip rect {
+  fill: #ff9;
+  stroke: #993;
+  stroke-width: 5;
+  opacity: 0.5;
+}
+
+svg .labels {
+  fill: #444;
+  font-size: 24px;
+}
+
+text {
+  cursor: default;
+}
+
+svg g.links {
+  pointer-events: none;
+}
+
+#vbfinder {
+  width: 150px;
+  position: absolute;
+  top: 0;
+  right: 0;
+}
+
+#vbfinder ul.legend {
+  padding: 0;
+  margin: 0;
+  font-size: smaller;
+}
