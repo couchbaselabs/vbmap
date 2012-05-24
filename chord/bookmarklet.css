@@ -1,0 +1,26 @@
+#chord {
+  float: left;
+  font: 10px sans-serif;
+}
+
+.chord path {
+  fill-opacity: .67;
+  stroke: #000;
+  stroke-width: .5px;
+}
+
+.nodes {
+  stroke: black;
+}
+
+.nodes path {
+  fill: grey;
+}
+
+.nodes path.bad {
+  fill: red;
+}
+
+#clusterform {
+  clear: left;
+}

@@ -53,6 +53,12 @@ a.bookmarklet {
       during rebalances.
       <br/><a href="clustermapbig.png"><img src="clustermap.png" alt="cluster map thumbnail" /></a>
     </p>
+    <h2>vBucket Chords</h2>
+    <p>
+      The
+      <a class="bookmarklet" href="javascript:(function(d,url,injectURL,f,s,n){n=Date.parse(Date());f=f?f:window.open(url+'?v='+n,url,'');s=d.createElement('SCRIPT');s.setAttribute('src',injectURL+'?'+n);s.onload=function(){injectIntoMembase(url,f);};d.body.appendChild(s);})(document,'http://couchbaselabs.github.com/vbmap/chord/bookmarklet.html','https://raw.github.com/alk/membase-vbucket-vis/gh-pages/inject.js',window.reinjectThis);">vBucket Chords</a>
+      shows the overview of vbucket quantities replicating between nodes.
+    </p>
   </div>
 </body>
 <script type="text/javascript">
