@@ -11,6 +11,20 @@ body {
     margin-top: 5px;
 }
 
+#legend {
+    float: right;
+    width: 200px;
+}
+
+#legend .status {
+    font-size: smaller;
+    color: #ccc;
+}
+
+#legend .status p {
+    margin: 0;
+}
+
 #nodes {
     margin: 0;
     padding: 0;
@@ -20,9 +34,4 @@ body {
 .chart rect {
     fill: steelblue;
     stroke: white;
-}
-
-#nodes {
-    float: right;
-    width: 200px;
 }

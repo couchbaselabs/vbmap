@@ -52,14 +52,32 @@ function initialize() {
             data.push(0);
         }
         var nodeNames=[];
+        var total = 0;
+        var largeV = 0, largeN = 0, smallV = 0, smallN = 10000000000000;
         for (var node in json.perNodeStates) {
             nodeNames.push(node);
             var nstates = json.perNodeStates[node];
             for (var vbid in nstates) {
-                data[vbid] = nstates[vbid].reported;
-                maxvalue = Math.max(maxvalue, nstates[vbid].reported);
+                var n = parseInt(nstates[vbid].reported);
+                if (n > largeN) {
+                    largeN = n;
+                    largeV = vbid;
+                }
+                if (n < smallN) {
+                    smallN = n;
+                    smallV = vbid;
+                }
+                data[vbid] = n;
+                total += n;
+                maxvalue = Math.max(maxvalue, n);
             }
         }
+
+        $("#total").text(total);
+        $("#largestv").text(largeV);
+        $("#largestn").text(largeN);
+        $("#smallestn").text(smallN);
+        $("#smallestv").text(smallV);
 
         var legend = d3.select("#nodes").selectAll("li").data(nodeNames);
         legend.enter().append("li");
@@ -142,15 +160,15 @@ function initialize() {
           .enter().append("text")
             .attr("class", "rule")
             .attr("x", 0)
-            .attr("dx", -18)
+            .attr("dx", -25)
             .attr("y", y)
             .attr("text-anchor", "middle")
-            .text(String);
+            .text(function(d) { return maxvalue - d; });
 
         chart.select(".ruley").selectAll(".rule")
             .data(y.ticks(10))
             .attr("y", y)
-            .text(String);
+            .text(function(d) { return maxvalue - d; });
 
         chart.select(".ruley").selectAll(".rule")
             .data(y.ticks(10))

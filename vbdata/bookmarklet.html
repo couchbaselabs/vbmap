@@ -17,7 +17,15 @@
 <div id="center">
   <div id="loading">Loading...</div>
   <div id="levels"></div>
-  <ul id="nodes"></ul>
+  <div id="legend">
+    <ul id="nodes"></ul>
+    <div class="status">
+      <p>Total items: <span id="total">many</span></p>
+      <p>Largest vbucket (<span id="largestv"></span>): <span id="largestn">many</span></p>
+      <p>Smallest vbucket
+        (<span id="smallestv"></span>): <span id="smallestn">many</span></p>
+    </div>
+  </div>
 </div>
 </body>
 <script src="bookmarklet.js"></script>
