@@ -1,0 +1,28 @@
+body {
+  font-family: verdana;
+  background: white;
+  color: black;
+  padding: 0;
+  margin: 0;
+}
+
+#levels {
+    float: left;
+    margin-top: 5px;
+}
+
+#nodes {
+    margin: 0;
+    padding: 0;
+    text-indent: 0;
+}
+
+.chart rect {
+    fill: steelblue;
+    stroke: white;
+}
+
+#nodes {
+    float: right;
+    width: 200px;
+}
