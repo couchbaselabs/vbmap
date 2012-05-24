@@ -2,25 +2,63 @@
 <head>
 <title>Bookmarklets for Visualisations</title>
 <style type="text/css">
-.bookmarklets li a {
-  background: #090;
+
+h1, h2 {
+  color: #c33;
+  background: inherit;
+}
+
+.bookmarklets {
+}
+
+.bookmarklets p {
+  margin-top: 20px;
+}
+
+a.bookmarklet {
+  background: #c33;
+  padding: 5px;
   color: white;
+  text-decoration: none;
+  text-align: middle;
+}
+
+.bookmarklets p img {
+  padding-top: 5px;
+  padding-left: 150px;
+}
+
+#bmimg {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  display: none;
 }
 </style>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"
         type="text/javascript"></script>
 </head>
 <body>
+  <h1>Couchbase Bookmarklets</h1>
   <p>
     Drag these onto your bookmark toolbar.
+    <img src="bookmarklet.png" id="bmimg" alt="bookmarklet" />
   </p>
-  <ul class="bookmarklets">
-    <li>
-      <a href="javascript:(function(d,url,injectURL,f,s,n){n=Date.parse(Date());f=f?f:window.open(url+'?v='+n,url,'');s=d.createElement('SCRIPT');s.setAttribute('src',injectURL+'?'+n);s.onload=function(){injectIntoMembase(url,f);};d.body.appendChild(s);})(document,'http://couchbaselabs.github.com/vbmap/map/bookmarklet.html','https://raw.github.com/alk/membase-vbucket-vis/gh-pages/inject.js',window.reinjectThis);">Vbucket Map</a>
-    </li>
-  </ul>
+  <div class="bookmarklets">
+    <h2>vBucket Map</h2>
+    <p>
+      The
+      <a class="bookmarklet" href="javascript:(function(d,url,injectURL,f,s,n){n=Date.parse(Date());f=f?f:window.open(url+'?v='+n,url,'');s=d.createElement('SCRIPT');s.setAttribute('src',injectURL+'?'+n);s.onload=function(){injectIntoMembase(url,f);};d.body.appendChild(s);})(document,'http://couchbaselabs.github.com/vbmap/map/bookmarklet.html','https://raw.github.com/alk/membase-vbucket-vis/gh-pages/inject.js',window.reinjectThis);">vBucket Map</a>
+      shows the detailed vbucket layout and illustrates movement
+      during rebalances.
+      <br/><a href="clustermapbig.png"><img src="clustermap.png" alt="cluster map thumbnail" /></a>
+    </p>
+  </div>
 </body>
 <script type="text/javascript">
-  $(".bookmarklets li a").click(function() { alert("You're supposed to drag it."); return false;});
+  var bmimg = $("#bmimg");
+  $("a.bookmarklet").click(function() { alert("You're supposed to drag it."); return false;});
+  $("a.bookmarklet").hover(function(){bmimg.fadeIn(200);}, function(){bmimg.fadeOut(200);});
+
 </script>
 </html>
