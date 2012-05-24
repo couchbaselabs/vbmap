@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/couchbaselabs/go-couchbase"
 )
@@ -113,6 +114,65 @@ func mapHandler(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
+type vbstats map[string]map[string]interface{}
+
+func getVbStats(bucket *couchbase.Bucket, commonSuffixMC string) map[string]vbstats {
+
+	allstats := bucket.GetStats("vbucket-details")
+
+	rv := map[string]vbstats{}
+	for fullname, m := range allstats {
+		sn := couchbase.CleanupHost(fullname, commonSuffixMC)
+		rv[sn] = vbstats{}
+
+		for k, v := range m {
+			var parts = strings.Split(k[3:], ":")
+			vbbig, err := strconv.ParseInt(parts[0], 10, 16)
+			maybefatal(err, "Error parsing vbucket:  %v/%v: %v",
+				k, v, err)
+			vb := fmt.Sprintf("%d", vbbig)
+			label := "state"
+			if len(parts) == 2 {
+				label = parts[1]
+			}
+			d, ok := rv[sn][vb]
+			if !ok {
+				d = make(map[string]interface{})
+				rv[sn][vb] = d
+			}
+			rv[sn][vb][label] = v
+		}
+	}
+	return rv
+}
+
+func vbHandler(w http.ResponseWriter, req *http.Request) {
+	w.Header().Set("Content-type", "application/javascript")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	bucket := getBucket(req)
+	defer bucket.Close()
+
+	commonSuffixMC := couchbase.FindCommonSuffix(bucket.VBucketServerMap.ServerList)
+
+	rv := map[string]interface{}{}
+	rv["server_list"] = getShortServerList(bucket, commonSuffixMC)
+	rv["stats"] = getVbStats(bucket, commonSuffixMC)
+	rv["repmap"] = bucket.VBucketServerMap.VBucketMap
+
+	req.ParseForm()
+	var_name := req.FormValue("name")
+
+	if var_name != "" {
+		fmt.Fprintf(w, "var "+var_name+" = ")
+	}
+	err := json.NewEncoder(w).Encode(rv)
+	maybefatal(err, "Error encoding output: %v", err)
+	if var_name != "" {
+		fmt.Fprintf(w, ";")
+	}
+}
+
 type handler func(http.ResponseWriter, *http.Request)
 
 func files(contentType string, paths ...string) handler {
@@ -164,5 +224,6 @@ func main() {
 	} else {
 		http.HandleFunc("/map", mapHandler)
 	}
+	http.HandleFunc("/vb", vbHandler)
 	log.Fatal(http.ListenAndServe(":4444", nil))
 }

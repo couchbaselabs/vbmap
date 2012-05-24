@@ -1,0 +1,95 @@
+<html>
+  <head>
+    <title>Cluster VBucket Map</title>
+    <meta http-equiv="refresh" content="21600">
+    <script type="text/javascript" src="/static/jquery.min.js"></script>
+    <script type="text/javascript" src="/static/d3.v2.min.js"></script>
+    <script type="text/javascript" src="/static/vbmap.js"></script>
+    <style type="text/css">
+body {
+  font-family: verdana;
+  background: white;
+  color: black;
+  padding: 0;
+  margin: 0;
+}
+
+#levels {
+  margin: 5px;
+}
+
+#levels rect {
+  stroke: white;
+}
+
+#legend .status {
+    float: right;
+    font-size: smaller;
+    color: #ccc;
+}
+
+#legend .status p {
+    margin: 0;
+}
+
+#nodes {
+    margin: 0;
+    padding: 0;
+    text-indent: 0;
+}
+    </style>
+  </head>
+  <body>
+    <div id="center">
+      <div id="loading">Loading...</div>
+      <div id="levels"></div>
+    </div>
+    <div id="legend">
+      <div class="status">
+        <p>Total items: <span id="total">many</span></p>
+        <p>Largest vbucket (<span id="largestv"></span>): <span id="largestn">many</span></p>
+        <p>Smallest vbucket
+          (<span id="smallestv"></span>): <span id="smallestn">many</span></p>
+      </div>
+      <h2>Nodes</h2>
+      <ul id="nodes"></ul>
+    </div>
+<script type="text/javascript">
+
+ $(document).ready(function() {
+   var clusterInfo = getClusterParams();
+   $("#clusterid").val(clusterInfo.cluster);
+   $("#bucketid").val(clusterInfo.bucket || 'default');
+
+   var chart = makeVBStatThing(window.innerWidth - 50, 600, '#levels');
+
+   function updateGraphs(json) {
+     chart(json);
+     var legend = d3.select("#nodes").selectAll("li").data(json.server_list);
+     legend.enter().append("li");
+
+     legend.text(String)
+         .style("color", function(d) { return chart.color(d); });
+
+     legend.exit().remove();
+
+     $("#total").text(chart.total);
+     $("#largestv").text(chart.largeV);
+     $("#largestn").text(chart.largeN);
+     $("#smallestn").text(chart.smallN);
+     $("#smallestv").text(chart.smallV);
+
+     $("#loading").hide();
+   }
+
+   doVBStatRequest(clusterInfo, updateGraphs, function() {
+      $("#loading").text("Problems initializing data, will keep retrying...");
+   }, function() { $("#clusterform").show(); });
+
+   setInterval(function() {
+       doVBStatRequest(clusterInfo, updateGraphs);
+     }, 5000);
+ });
+    </script>
+  </body>
+</html>

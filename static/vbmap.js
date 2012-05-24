@@ -10,6 +10,7 @@ if(!Object.keys) Object.keys = function(o) {
 
 // Base URL for all map requests.  Can allow for remote requests.
 var mapRequestBase = "/map";
+var statRequestBase = "/vb";
 
 function getClusterParams() {
     var s = document.location.search.substring(1);
@@ -120,6 +121,27 @@ function doMapRequest(clusterInfo, fun, errfun, finfun) {
     } else {
         doMapRequestVBMap(clusterInfo, fun, errfun, finfun);
     }
+}
+
+function doVBStatRequest(clusterInfo, fun, errfun, finfun) {
+    var params="rand=" + Math.random();
+    if (clusterInfo.cluster) {
+        params += '&cluster=' + clusterInfo.cluster;
+    }
+    if (clusterInfo.bucket) {
+        params += '&bucket=' + clusterInfo.bucket;
+    }
+    console.log("Requesting", statRequestBase + "?" + params);
+    d3.json(statRequestBase + "?" + params, function(json) {
+        if (json != null) {
+            fun(json);
+        } else if(errfun) {
+            errfun();
+        }
+        if (finfun) {
+            finfun();
+        }
+    });
 }
 
 function makeState(w, h, container) {
@@ -843,6 +865,146 @@ function makeVBThing(w, h, container) {
             });
 
         circles.exit().remove();
+    }
+
+    return update;
+}
+
+function makeVBStatThing(totalWidth, h, container) {
+    var chart = d3.select(container + " svg g.canvas");
+    chart = d3.select(container)
+        .append("svg")
+        .attr("width", w)
+        .attr("height", h)
+      .append("g")
+        .attr("transform", "translate(50, 15)");
+
+    var w = 5;
+
+    var maxvalue = 1;
+
+    var x;
+    var y;
+
+    var color = d3.scale.category20();
+
+    chart.append("g").attr("class", "rulex");
+    chart.append("g").attr("class", "ruley");
+    chart.append("g").attr("class", "plot");
+
+    function update(json) {
+        update.color = color;
+        var data = [];
+        var total = 0;
+        update.largeV = 0, update.largeN = 0, update.smallV = 0, update.smallN = 10000000000000;
+        for (var node in json.stats) {
+            var nstates = json.stats[node];
+            for (var vbid in nstates) {
+                var n = parseInt(nstates[vbid].num_items);
+                if (n > update.largeN) {
+                    update.largeN = n;
+                    update.largeV = vbid;
+                }
+                if (n < update.smallN) {
+                    update.smallN = n;
+                    update.smallV = vbid;
+                }
+                data[vbid] = n;
+                total += n;
+                maxvalue = Math.max(maxvalue, n);
+            }
+        }
+
+        function master(n) {
+            return json.server_list[json.repmap[n][0]];
+        }
+
+        w = Math.max(2, Math.floor(totalWidth / data.length));
+
+        x = d3.scale.linear()
+            .domain([0, 1])
+            .range([0, w]);
+
+        y = d3.scale.linear()
+            .domain([0, maxvalue])
+            .rangeRound([0, h]);
+
+        chart.select(".plot").selectAll("rect")
+            .data(data)
+          .enter().append("rect")
+            .attr("x", function(d, i) { return x(i) - .5; })
+            .attr("y", function(d) { return h - y(d) - .5; })
+            .attr("width", w)
+            .attr("height", function(d) { return y(d); })
+            .style("fill", function(d, i) { return color(master(i));});
+
+        chart.select(".plot").selectAll("rect")
+            .data(data)
+          .transition()
+            .duration(1000)
+            .style("fill", function(d, i) { return color(master(i));})
+            .attr("y", function(d) { return h - y(d) - .5; })
+            .attr("height", function(d) { return y(d); });
+
+        var ruler = d3.scale.linear()
+            .domain([0, data.length])
+            .range([0, data.length]);
+
+        chart.select(".rulex").selectAll("line")
+            .data(ruler.ticks(10))
+          .enter().append("line")
+            .attr("x1", x)
+            .attr("x2", x)
+            .attr("y1", 0)
+            .attr("y2", h)
+            .style("stroke", "#ccc");
+
+        chart.select(".rulex").selectAll(".rulex")
+            .data(ruler.ticks(10))
+          .enter().append("text")
+            .attr("class", "rulex")
+            .attr("x", x)
+            .attr("y", 0)
+            .attr("dy", -3)
+            .attr("text-anchor", "middle")
+            .text(function(d) { return d > 0 ? d : ""; });
+
+        chart.select(".ruley").selectAll("line")
+            .data(y.ticks(10))
+          .enter().append("line")
+            .attr("x1", 0)
+            .attr("x2", totalWidth)
+            .attr("y1", y)
+            .attr("y2", y)
+            .style("stroke", "#ccc");
+
+        chart.select(".ruley").selectAll("line")
+            .data(y.ticks(10))
+            .attr("y1", y)
+            .attr("y2", y);
+
+        chart.select(".ruley").selectAll("line")
+            .data(y.ticks(10))
+          .exit().remove();
+
+        chart.select(".ruley").selectAll(".rule")
+            .data(y.ticks(10))
+          .enter().append("text")
+            .attr("class", "rule")
+            .attr("x", 0)
+            .attr("dx", -25)
+            .attr("y", y)
+            .attr("text-anchor", "middle")
+            .text(function(d) { return maxvalue - d; });
+
+        chart.select(".ruley").selectAll(".rule")
+            .data(y.ticks(10))
+            .attr("y", y)
+            .text(function(d) { return maxvalue - d; });
+
+        chart.select(".ruley").selectAll(".rule")
+            .data(y.ticks(10))
+            .exit().remove();
     }
 
     return update;
