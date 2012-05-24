@@ -52,7 +52,8 @@ function computeNodeMap(vbmap, nodenames) {
     return rv;
 }
 
-function doMapRequest(clusterInfo, fun, errfun, finfun) {
+// Map request thing when using the vbmap server.
+function doMapRequestVBMap(clusterInfo, fun, errfun, finfun) {
     var params="rand=" + Math.random();
     if (clusterInfo.cluster) {
         params += '&cluster=' + clusterInfo.cluster;
@@ -71,6 +72,54 @@ function doMapRequest(clusterInfo, fun, errfun, finfun) {
             finfun();
         }
     });
+}
+
+// Map request thing when using the injection thing.
+function doMapRequestInjection(clusterInfo, fun, errfun, finfun) {
+    function deport(thing) {
+        return thing.split(":")[0];
+    }
+
+    function deportList(things) {
+        var rv = [];
+        for (var i = 0; i < things.length; i++) {
+            rv.push(deport(things[i]));
+        }
+        return rv;
+    }
+
+    InjectionController.slaveGet("/pools/default/buckets/" +
+                                 encodeURIComponent(clusterInfo.bucket),
+                                 function (json) {
+                                     var data = {
+                                         repmap: json.vBucketServerMap.vBucketMap,
+                                         server_list: deportList(json.vBucketServerMap.serverList),
+                                         server_states: {}
+                                     };
+                                     for (var i = 0; i < json.nodes.length; i++) {
+                                         var node = json.nodes[i];
+                                         data.server_states[deport(node.hostname)] = node.status;
+                                     }
+                                     data.vbmap = computeNodeMap(data.repmap, data.server_list);
+                                     fun(data);
+                                     if (finfun) {
+                                         finfun();
+                                     }
+                                 });
+}
+
+function doMapRequest(clusterInfo, fun, errfun, finfun) {
+    var injected = false;
+    try {
+        injected = InjectionController && true;
+    } catch (ReferenceError) {
+        injected = false;
+    }
+    if (injected) {
+        doMapRequestInjection(clusterInfo, fun, errfun, finfun);
+    } else {
+        doMapRequestVBMap(clusterInfo, fun, errfun, finfun);
+    }
 }
 
 function makeState(w, h, container) {
