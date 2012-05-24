@@ -3,39 +3,6 @@ var clusterInfo = {
     bucket: "default"
 };
 
-function deport(thing) {
-    return thing.split(":")[0];
-}
-
-function deportList(things) {
-    var rv = [];
-    for (var i = 0; i < things.length; i++) {
-        rv.push(deport(things[i]));
-    }
-    return rv;
-}
-
-function fetchData(fun, errfun, finfun) {
-    InjectionController.slaveGet("/pools/default/buckets/" +
-                                 encodeURIComponent(clusterInfo.bucket),
-                                 function (json) {
-                                     var data = {
-                                         repmap: json.vBucketServerMap.vBucketMap,
-                                         server_list: deportList(json.vBucketServerMap.serverList),
-                                         server_states: {}
-                                     };
-                                     for (var i = 0; i < json.nodes.length; i++) {
-                                         var node = json.nodes[i];
-                                         data.server_states[deport(node.hostname)] = node.status;
-                                     }
-                                     data.vbmap = computeNodeMap(data.repmap, data.server_list);
-                                     fun(data);
-                                     if (finfun) {
-                                         finfun();
-                                     }
-                                 });
-}
-
 function initialize() {
     $("#clusterid").val(clusterInfo.cluster);
     $("#bucketid").val(clusterInfo.bucket || 'default');
@@ -80,10 +47,10 @@ function initialize() {
         $("#loading").hide();
     }
 
-    fetchData(updateGraphs);
+    doMapRequest(clusterInfo, updateGraphs);
 
     setInterval(function() {
-        fetchData(updateGraphs);
+        doMapRequest(clusterInfo, updateGraphs);
     }, 2000);
 }
 
