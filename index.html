@@ -51,19 +51,22 @@ a.bookmarklet {
       <a class="bookmarklet" href="javascript:(function(d,url,injectURL,f,s,n){n=Date.parse(Date());f=f?f:window.open(url+'?v='+n,url,'');s=d.createElement('SCRIPT');s.setAttribute('src',injectURL+'?'+n);s.onload=function(){injectIntoMembase(url,f);};d.body.appendChild(s);})(document,'http://couchbaselabs.github.com/vbmap/map/bookmarklet.html','https://raw.github.com/alk/membase-vbucket-vis/gh-pages/inject.js',window.reinjectThis);">vBucket Map</a>
       shows the detailed vbucket layout and illustrates movement
       during rebalances.
-      <br/><a href="clustermapbig.png"><img src="clustermap.png" alt="cluster map thumbnail" /></a>
+      <br/><a href="map/clustermapbig.png"><img src="map/clustermap.png" alt="cluster map thumbnail" /></a>
     </p>
     <h2>vBucket Chords</h2>
     <p>
       The
       <a class="bookmarklet" href="javascript:(function(d,url,injectURL,f,s,n){n=Date.parse(Date());f=f?f:window.open(url+'?v='+n,url,'');s=d.createElement('SCRIPT');s.setAttribute('src',injectURL+'?'+n);s.onload=function(){injectIntoMembase(url,f);};d.body.appendChild(s);})(document,'http://couchbaselabs.github.com/vbmap/chord/bookmarklet.html','https://raw.github.com/alk/membase-vbucket-vis/gh-pages/inject.js',window.reinjectThis);">vBucket Chords</a>
       shows the overview of vbucket quantities replicating between nodes.
+      <br/><a href="chord/chords.png"><img src="chord/chords-thumb.png" alt="chord thumbnail" /></a>
     </p>
     <h2>Cluster State</h2>
     <p>
       The
       <a class="bookmarklet" href="javascript:(function(d,url,injectURL,f,s,n){n=Date.parse(Date());f=f?f:window.open(url+'?v='+n,url,'');s=d.createElement('SCRIPT');s.setAttribute('src',injectURL+'?'+n);s.onload=function(){injectIntoMembase(url,f);};d.body.appendChild(s);})(document,'http://couchbaselabs.github.com/vbmap/cluster/bookmarklet.html','https://raw.github.com/alk/membase-vbucket-vis/gh-pages/inject.js',window.reinjectThis);">Cluster State</a>
       shows the overview of the cluster.
+      <br/><a href="cluster/state.png"><img src="cluster/state-thumb.png"
+                                            alt="cluster state thumbnail" /></a>
     </p>
   </div>
 </body>
