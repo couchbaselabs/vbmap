@@ -220,9 +220,10 @@ func main() {
 
 	if *staticPath {
 		http.HandleFunc("/map", files("application/javascript", flag.Args()...))
+		http.HandleFunc("/vb", files("application/javascript", flag.Args()...))
 	} else {
 		http.HandleFunc("/map", mapHandler)
+		http.HandleFunc("/vb", vbHandler)
 	}
-	http.HandleFunc("/vb", vbHandler)
 	log.Fatal(http.ListenAndServe(":4444", nil))
 }
