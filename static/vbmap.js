@@ -898,8 +898,8 @@ function makeVBStatThing(totalWidth, h, container) {
         var masters = {};
         update.total = 0;
         update.largeV = 0, update.largeN = 0, update.smallV = 0, update.smallN = 10000000000000;
-        for (var node in json.stats) {
-            var nstates = json.stats[node];
+        for (var node in json) {
+            var nstates = json[node];
             for (var vbid in nstates) {
                 if (nstates[vbid].state === 'active') {
                     masters[vbid] = node;

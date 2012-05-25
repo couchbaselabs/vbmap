@@ -155,9 +155,7 @@ func vbHandler(w http.ResponseWriter, req *http.Request) {
 
 	commonSuffixMC := couchbase.FindCommonSuffix(bucket.VBucketServerMap.ServerList)
 
-	rv := map[string]interface{}{}
-	rv["server_list"] = getShortServerList(bucket, commonSuffixMC)
-	rv["stats"] = getVbStats(bucket, commonSuffixMC)
+	rv := getVbStats(bucket, commonSuffixMC)
 
 	req.ParseForm()
 	var_name := req.FormValue("name")

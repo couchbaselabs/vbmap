@@ -95,7 +95,9 @@ body {
 
    function updateGraphs(json) {
      chart(json, $("input[@name=stat]:checked").val());
-     var legend = d3.select("#nodes").selectAll("li").data(json.server_list);
+     var nodes = d3.keys(json);
+     nodes.sort(d3.ascending);
+     var legend = d3.select("#nodes").selectAll("li").data(nodes);
      legend.enter().append("li");
 
      legend.text(String)
