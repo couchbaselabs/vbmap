@@ -5,8 +5,12 @@
     <script type="text/javascript" src="/static/d3.v2.min.js"></script>
     <script type="text/javascript" src="/static/vbmap.js"></script>
     <style type="text/css">
-#replicas, #cluster {
-  float: left;
+
+#center {
+  text-align: center;
+}
+#replicas, #cluster, #queue {
+  display: inline;
   font: 10px sans-serif;
 }
 
@@ -39,6 +43,7 @@
       <div id="loading">Loading...</div>
       <div id="cluster"></div>
       <div id="replicas"></div>
+      <div id="queue"></div>
     </div>
     <div>
       <form id="clusterform" method="GET" action="/" style="display: none">
@@ -54,10 +59,13 @@
    $("#clusterid").val(clusterInfo.cluster);
    $("#bucketid").val(clusterInfo.bucket || 'default');
 
-   var imgdim = Math.round((window.innerWidth / 2) - 20);
+   var imgdim = Math.min(
+                         Math.round((window.innerWidth / 2) - 20),
+                         Math.round(window.innerHeight - 260));
 
    var state = makeState(imgdim, imgdim, '#cluster');
    var chord = makeChord(imgdim, imgdim, '#replicas').fill('grey');
+   var queues = makeVBStatThing(imgdim * 2, 240, '#queue');
 
    function updateGraphs(json) {
      state(json);
@@ -65,12 +73,19 @@
      $("#loading").hide();
    }
 
+   function updateQueue(json) {
+     queues(json, 'queue_size');
+   }
+
    doMapRequest(clusterInfo, updateGraphs, function() {
       $("#loading").text("Problems initializing data, will keep retrying...");
    }, function() { $("#clusterform").show(); });
 
+   doVBStatRequest(clusterInfo, updateQueue);
+
    setInterval(function() {
        doMapRequest(clusterInfo, updateGraphs);
+       doVBStatRequest(clusterInfo, updateQueue);
      }, 5000);
  });
     </script>
