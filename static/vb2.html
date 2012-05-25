@@ -58,6 +58,19 @@ body {
       </div>
       <h2>Nodes</h2>
       <ul id="nodes"></ul>
+      <form method="post" action="#">
+        <input type="radio" name="stat" value="num_items"
+               checked="checked">Number of Items</input>
+        <input type="radio" name="stat" value="ht_item_memory">Memory Size</input>
+        <input type="radio" name="stat"
+               value="pending_writes">Pending Writes</input>
+        <input type="radio" name="stat"
+               value="queue_size">Queue Size</input>
+        <input type="radio" name="stat"
+               value="num_resident">Resident Items</input>
+        <input type="radio" name="stat"
+               value="num_resident">Resident Items</input>
+      </form>
     </div>
 <script type="text/javascript">
 
@@ -67,7 +80,7 @@ body {
    $("#bucketid").val(clusterInfo.bucket || 'default');
 
    var chart = makeVBStatThing(window.innerWidth - 50,
-                               window.innerHeight - 100,
+                               window.innerHeight - 150,
                                '#levels');
 
    function updateGraphs(json) {

@@ -158,7 +158,6 @@ func vbHandler(w http.ResponseWriter, req *http.Request) {
 	rv := map[string]interface{}{}
 	rv["server_list"] = getShortServerList(bucket, commonSuffixMC)
 	rv["stats"] = getVbStats(bucket, commonSuffixMC)
-	rv["repmap"] = bucket.VBucketServerMap.VBucketMap
 
 	req.ParseForm()
 	var_name := req.FormValue("name")

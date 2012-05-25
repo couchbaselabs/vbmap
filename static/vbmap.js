@@ -881,26 +881,35 @@ function makeVBStatThing(totalWidth, h, container) {
 
     var w = 5;
 
-    var maxvalue = 1;
-
     var x;
     var y;
 
     var color = d3.scale.category20();
+
+    var maxvalue = {};
+    var prevstat = "";
 
     chart.append("g").attr("class", "rulex");
     chart.append("g").attr("class", "ruley");
     chart.append("g").attr("class", "plot");
 
     function update(json) {
+        var stat = $("input[@name=stat]:checked").val();
+        if (stat != prevstat) {
+            maxvalue[prevstat] = 0;
+        }
         update.color = color;
         var data = [];
-        var total = 0;
+        var masters = {};
+        update.total = 0;
         update.largeV = 0, update.largeN = 0, update.smallV = 0, update.smallN = 10000000000000;
         for (var node in json.stats) {
             var nstates = json.stats[node];
             for (var vbid in nstates) {
-                var n = parseInt(nstates[vbid].num_items);
+                if (nstates[vbid].state === 'active') {
+                    masters[vbid] = node;
+                }
+                var n = parseInt(nstates[vbid][stat]);
                 if (n > update.largeN) {
                     update.largeN = n;
                     update.largeV = vbid;
@@ -910,13 +919,13 @@ function makeVBStatThing(totalWidth, h, container) {
                     update.smallV = vbid;
                 }
                 data[vbid] = n;
-                total += n;
-                maxvalue = Math.max(maxvalue, n);
+                update.total += n;
+                maxvalue[stat] = Math.max(maxvalue[stat] || 0, n);
             }
         }
 
         function master(n) {
-            return json.server_list[json.repmap[n][0]];
+            return masters[n];
         }
 
         w = Math.max(2, Math.floor(totalWidth / data.length));
@@ -926,7 +935,7 @@ function makeVBStatThing(totalWidth, h, container) {
             .range([0, w]);
 
         y = d3.scale.linear()
-            .domain([0, maxvalue])
+            .domain([0, maxvalue[stat]])
             .rangeRound([0, h]);
 
         chart.select(".plot").selectAll("rect")
@@ -995,12 +1004,12 @@ function makeVBStatThing(totalWidth, h, container) {
             .attr("dx", -25)
             .attr("y", y)
             .attr("text-anchor", "middle")
-            .text(function(d) { return maxvalue - d; });
+            .text(function(d) { return maxvalue[stat] - d; });
 
         chart.select(".ruley").selectAll(".rule")
             .data(y.ticks(10))
             .attr("y", y)
-            .text(function(d) { return maxvalue - d; });
+            .text(function(d) { return maxvalue[stat] - d; });
 
         chart.select(".ruley").selectAll(".rule")
             .data(y.ticks(10))
