@@ -131,7 +131,6 @@ function doVBStatRequest(clusterInfo, fun, errfun, finfun) {
     if (clusterInfo.bucket) {
         params += '&bucket=' + clusterInfo.bucket;
     }
-    console.log("Requesting", statRequestBase + "?" + params);
     d3.json(statRequestBase + "?" + params, function(json) {
         if (json != null) {
             fun(json);
