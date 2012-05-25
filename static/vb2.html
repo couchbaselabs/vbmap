@@ -14,12 +14,23 @@ body {
   margin: 0;
 }
 
+#loading.broken {
+  font-size: larger;
+  color: red;
+  font-weight: bold;
+}
+
 #levels {
   margin: 5px;
 }
 
 #levels rect {
   stroke: white;
+}
+
+#levels.broken {
+  stroke-opacity: .5;
+  fill-opacity: .5;
 }
 
 #legend .status {
@@ -99,15 +110,24 @@ body {
      $("#smallestn").text(chart.smallN);
      $("#smallestv").text(chart.smallV);
 
+     $("#levels").removeClass("broken");
      $("#loading").hide();
    }
 
    doVBStatRequest(clusterInfo, updateGraphs, function() {
       $("#loading").text("Problems initializing data, will keep retrying...");
+      $("#loading").addClass("broken");
    }, function() { $("#clusterform").show(); });
 
    setInterval(function() {
-       doVBStatRequest(clusterInfo, updateGraphs);
+       doVBStatRequest(clusterInfo, updateGraphs,
+                       function() {
+                         var loading = $("#loading");
+                         loading.text("Error updating, will keep retrying...");
+                         loading.addClass("broken");
+                         loading.show();
+                         $("#levels").addClass("broken");
+                       });
      }, 5000);
  });
     </script>
