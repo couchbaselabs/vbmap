@@ -1012,7 +1012,7 @@ function makeVBStatThing(totalWidth, h, container) {
         chart.select(".ruley").selectAll(".rule")
             .data(y.ticks(10))
             .attr("y", y)
-            .text(function(d) { return maxvalue - d; });
+            .text(function(d) { return d3.format("0.2s")(maxvalue - d); });
 
         chart.select(".ruley").selectAll(".rule")
             .data(y.ticks(10))
