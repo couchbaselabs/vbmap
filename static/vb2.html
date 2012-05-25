@@ -70,7 +70,7 @@ body {
       </div>
       <h2>Nodes</h2>
       <ul id="nodes"></ul>
-      <form method="post" action="#">
+      <form method="post" action="#" id="statselection">
         <input type="radio" name="stat" value="num_items"
                checked="checked">Number of Items</input>
         <input type="radio" name="stat" value="ht_item_memory">Memory Size</input>
@@ -94,7 +94,18 @@ body {
                                '#levels');
 
    function updateGraphs(json) {
-     chart(json, $("input[@name=stat]:checked").val());
+
+   var selected = window.location.hash.substring(1);
+   if (window.location.hash.substring(1) === "") {
+       selected = "num_items";
+   }
+
+   $("#statselection input").attr("checked", null);
+   $("#statselection input").filter(function(i, e) {
+                      return e.value === selected;
+                    }).attr("checked", "checked");
+
+     chart(json, selected);
      var nodes = d3.keys(json);
      nodes.sort(d3.ascending);
      var legend = d3.select("#nodes").selectAll("li").data(nodes);
@@ -119,6 +130,11 @@ body {
       $("#loading").text("Problems initializing data, will keep retrying...");
       $("#loading").addClass("broken");
    }, function() { $("#clusterform").show(); });
+
+   $("#statselection input").click(function(e) {
+                                       selected = $("input[@name=stat]:checked").val();
+                                       window.location.hash = selected;
+                                   });
 
    setInterval(function() {
        doVBStatRequest(clusterInfo, updateGraphs,
