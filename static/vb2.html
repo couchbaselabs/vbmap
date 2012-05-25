@@ -94,7 +94,7 @@ body {
                                '#levels');
 
    function updateGraphs(json) {
-     chart(json);
+     chart(json, $("input[@name=stat]:checked").val());
      var legend = d3.select("#nodes").selectAll("li").data(json.server_list);
      legend.enter().append("li");
 

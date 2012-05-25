@@ -891,8 +891,7 @@ function makeVBStatThing(totalWidth, h, container) {
     chart.append("g").attr("class", "ruley");
     chart.append("g").attr("class", "plot");
 
-    function update(json) {
-        var stat = $("input[@name=stat]:checked").val();
+    function update(json, stat) {
         var maxvalue = 0;
         update.color = color;
         var data = [];
