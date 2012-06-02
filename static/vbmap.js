@@ -642,7 +642,14 @@ function makeVBThing(w, h, container) {
 
     var prevj = "";
 
-    function update(sstate) {
+    var classOverride;
+
+    var sstate;
+
+    function update(st) {
+        if (st) {
+            sstate = st;
+        }
 
         var somethingChanged = false;
 
@@ -834,7 +841,11 @@ function makeVBThing(w, h, container) {
 
         circles.data(vbuckets)
             .attr("class", function(d) {
-                return d.hasReplica ? ('rep' + d.which) : 'noreplica';
+                var c = d.hasReplica ? ('rep' + d.which) : 'noreplica';
+                if (classOverride) {
+                    c = c + " " + classOverride(d, c);
+                }
+                return c;
             })
             .on("mouseover", function(d, i) {
                 var m = sstate.repmap[d.vbid];
@@ -865,6 +876,10 @@ function makeVBThing(w, h, container) {
 
         circles.exit().remove();
     }
+
+    update.overrideClass = function(f) {
+        classOverride = f;
+    };
 
     return update;
 }

@@ -59,6 +59,10 @@ svg g.vbuckets circle {
   color: #bcbd22;
 }
 
+svg g.vbuckets circle.obscured {
+  opacity: 0.3;
+}
+
 svg g.tooltip {
   pointer-events: none;
 }
@@ -94,6 +98,7 @@ svg g.links {
   padding: 0;
   margin: 0;
   font-size: smaller;
+  cursor: default;
 }
 
     </style>
@@ -177,6 +182,17 @@ svg g.links {
    setInterval(function() {
        doMapRequest(clusterInfo, updateGraphs);
      }, 5000);
+
+   $(".legend li").hover(function(ev) {
+        forcething.overrideClass(function(d, c) {
+            return c == ev.srcElement.className ? "" : "obscured";
+          });
+        forcething();
+      },
+      function(ev) {
+        forcething.overrideClass(null);
+        forcething();
+      });
  });
     </script>
   </body>
