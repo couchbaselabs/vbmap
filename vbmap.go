@@ -87,7 +87,7 @@ func getBucket(req *http.Request) *couchbase.Bucket {
 }
 
 func mapHandler(w http.ResponseWriter, req *http.Request) {
-	w.Header().Set("Content-type", "application/javascript")
+	w.Header().Set("Content-type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	bucket := getBucket(req)
@@ -147,7 +147,7 @@ func getVbStats(bucket *couchbase.Bucket, commonSuffixMC string) map[string]vbst
 }
 
 func vbHandler(w http.ResponseWriter, req *http.Request) {
-	w.Header().Set("Content-type", "application/javascript")
+	w.Header().Set("Content-type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	bucket := getBucket(req)
@@ -217,8 +217,8 @@ func main() {
 	http.Handle("/static/", http.FileServer(http.Dir(".")))
 
 	if *staticPath {
-		http.HandleFunc("/map", files("application/javascript", flag.Args()...))
-		http.HandleFunc("/vb", files("application/javascript", flag.Args()...))
+		http.HandleFunc("/map", files("application/json", flag.Args()...))
+		http.HandleFunc("/vb", files("application/json", flag.Args()...))
 	} else {
 		http.HandleFunc("/map", mapHandler)
 		http.HandleFunc("/vb", vbHandler)
