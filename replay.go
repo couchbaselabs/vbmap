@@ -49,31 +49,6 @@ func (r *replayEvent) TS() time.Time {
 	return r.Timestamp
 }
 
-type replaySource struct {
-	d *json.Decoder
-}
-
-func (r *replaySource) Next() replay.Event {
-	rv := replayEvent{}
-	err := r.d.Decode(&rv)
-	if err != nil {
-		if err != io.EOF {
-			log.Printf("Error decoding: %v", err)
-		}
-		return nil
-	}
-	return &rv
-}
-
-type replayAction struct {
-}
-
-func (r *replayAction) Process(ev replay.Event) {
-	re := ev.(*replayEvent)
-	log.Printf("Got thing as of %v", re.TS())
-	currentState.statech <- re
-}
-
 func replayFile(replaySpeed float64, path string) {
 	r := replay.New(replaySpeed)
 	f, err := os.Open(path)
@@ -81,11 +56,26 @@ func replayFile(replaySpeed float64, path string) {
 	defer f.Close()
 	g, err := gzip.NewReader(f)
 	maybefatal(err, "Error starting decompression stream: %v", err)
+	d := json.NewDecoder(g)
 
-	rs := &replaySource{json.NewDecoder(g)}
-	a := &replayAction{}
+	src := replay.FunctionSource(func() replay.Event {
+		rv := replayEvent{}
+		err := d.Decode(&rv)
+		if err != nil {
+			if err != io.EOF {
+				log.Printf("Error decoding: %v", err)
+			}
+			return nil
+		}
+		return &rv
+	})
 
-	toff := r.Run(rs, a)
+	toff := r.Run(src,
+		replay.FunctionAction(func(ev replay.Event) {
+			re := ev.(*replayEvent)
+			log.Printf("Got thing as of %v", re.TS())
+			currentState.statech <- re
+		}))
 
 	tlbl := "early"
 	if int64(toff) < 0 {
