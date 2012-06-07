@@ -85,8 +85,14 @@ func replayFile(replaySpeed float64, path string) {
 	rs := &replaySource{json.NewDecoder(g)}
 	a := &replayAction{}
 
-	r.Run(rs, a)
+	toff := r.Run(rs, a)
 
+	tlbl := "early"
+	if int64(toff) < 0 {
+		tlbl = "late"
+		toff = 0 - toff
+	}
+	log.Printf("Finished %v %s.", toff, tlbl)
 }
 
 func startReplay(replaySpeed float64, path string) {
