@@ -10,7 +10,8 @@ if(!Object.keys) Object.keys = function(o) {
 
 // Base URL for all map requests.  Can allow for remote requests.
 var mapRequestBase = "/map";
-var statRequestBase = "/vb";
+var vbStatRequestBase = "/vb";
+var statRequestBase = "/stats";
 
 function getClusterParams() {
     var s = document.location.search.substring(1);
@@ -124,6 +125,26 @@ function doMapRequest(clusterInfo, fun, errfun, finfun) {
 }
 
 function doVBStatRequest(clusterInfo, fun, errfun, finfun) {
+    var params="rand=" + Math.random();
+    if (clusterInfo.cluster) {
+        params += '&cluster=' + clusterInfo.cluster;
+    }
+    if (clusterInfo.bucket) {
+        params += '&bucket=' + clusterInfo.bucket;
+    }
+    d3.json(vbStatRequestBase + "?" + params, function(json) {
+        if (json != null) {
+            fun(json);
+        } else if(errfun) {
+            errfun();
+        }
+        if (finfun) {
+            finfun();
+        }
+    });
+}
+
+function doGenericStatRequest(clusterInfo, st, fun, errfun, finfun) {
     var params="rand=" + Math.random();
     if (clusterInfo.cluster) {
         params += '&cluster=' + clusterInfo.cluster;

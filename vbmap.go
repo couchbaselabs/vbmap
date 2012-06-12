@@ -150,6 +150,42 @@ func getVbStats(bucket *couchbase.Bucket, commonSuffixMC string) map[string]vbst
 	return processVBDetails(bucket.GetStats("vbucket-details"), commonSuffixMC)
 }
 
+func processGenericStats(in map[string]map[string]string, commonSuffixMC string) map[string]map[string]string {
+	out := map[string]map[string]string{}
+	for k, v := range in {
+		out[couchbase.CleanupHost(k, commonSuffixMC)] = v
+	}
+	return out
+}
+
+func getStats(bucket *couchbase.Bucket, commonSuffixMC string) map[string]map[string]string {
+	return processGenericStats(bucket.GetStats(""), commonSuffixMC)
+}
+
+func statsHandler(w http.ResponseWriter, req *http.Request) {
+	w.Header().Set("Content-type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	bucket := getBucket(req)
+	defer bucket.Close()
+
+	commonSuffixMC := couchbase.FindCommonSuffix(bucket.VBucketServerMap.ServerList)
+
+	rv := getStats(bucket, commonSuffixMC)
+
+	req.ParseForm()
+	var_name := req.FormValue("name")
+
+	if var_name != "" {
+		fmt.Fprintf(w, "var "+var_name+" = ")
+	}
+	err := json.NewEncoder(w).Encode(rv)
+	maybefatal(err, "Error encoding output: %v", err)
+	if var_name != "" {
+		fmt.Fprintf(w, ";")
+	}
+}
+
 func vbHandler(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Content-type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
@@ -247,6 +283,37 @@ func replayvbHandler(w http.ResponseWriter, req *http.Request) {
 	}
 }
 
+func replaystatsHandler(w http.ResponseWriter, req *http.Request) {
+	w.Header().Set("Content-type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
+	re := currentState.current()
+
+	conv := map[string]map[string]string{}
+	for s, m := range re.All {
+		out, ok := conv[s]
+		if !ok {
+			out = make(map[string]string)
+			conv[s] = out
+		}
+		for k, v := range m {
+			out[k] = fmt.Sprintf("%v", v)
+		}
+	}
+
+	req.ParseForm()
+	var_name := req.FormValue("name")
+
+	if var_name != "" {
+		fmt.Fprintf(w, "var "+var_name+" = ")
+	}
+	err := json.NewEncoder(w).Encode(conv)
+	maybefatal(err, "Error encoding output: %v", err)
+	if var_name != "" {
+		fmt.Fprintf(w, ";")
+	}
+}
+
 func main() {
 	staticPath := flag.Bool("static", false,
 		"Interpret URL as a static path (for testing)")
@@ -270,13 +337,16 @@ func main() {
 	default:
 		http.HandleFunc("/map", mapHandler)
 		http.HandleFunc("/vb", vbHandler)
+		http.HandleFunc("/stats", statsHandler)
 	case *staticPath:
 		http.HandleFunc("/map", files("application/json", flag.Args()...))
 		http.HandleFunc("/vb", files("application/json", flag.Args()...))
+		http.HandleFunc("/stats", files("application/json", flag.Args()...))
 	case *replayPath:
 		go startReplay(*replaySpeed, flag.Arg(0))
 		http.HandleFunc("/map", replaymapHandler)
 		http.HandleFunc("/vb", replayvbHandler)
+		http.HandleFunc("/stats", replaystatsHandler)
 	}
 
 	log.Fatal(http.ListenAndServe(":4444", nil))
