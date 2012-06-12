@@ -113,7 +113,12 @@ func mapHandler(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	bucket := getBucket(req)
+	if bucket == nil {
+		http.NotFound(w, req)
+		return
+	}
 	defer bucket.Close()
+	displayMap(w, req, bucket)
 }
 
 type vbstats map[string]map[string]interface{}
@@ -167,6 +172,10 @@ func statsHandler(w http.ResponseWriter, req *http.Request) {
 	w.Header().Set("Access-Control-Allow-Origin", "*")
 
 	bucket := getBucket(req)
+	if bucket == nil {
+		http.NotFound(w, req)
+		return
+	}
 	defer bucket.Close()
 
 	commonSuffixMC := couchbase.FindCommonSuffix(bucket.VBucketServerMap.ServerList)
