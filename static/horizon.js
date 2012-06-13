@@ -1,4 +1,4 @@
-statRequestBase = "http://cbvis.west.spy.net/stats";
+// statRequestBase = "http://cbvis.west.spy.net/stats";
 
 function drawHorizon(here, clusterInfo) {
 
@@ -145,28 +145,28 @@ function drawHorizon(here, clusterInfo) {
         }, label);
     }
 
-    // Stolen from jchris
-    function binRows(rows, start, step) {
-        var times, gap, i, j, val = 0, vals = [];
-        for (i=0; i < rows.length; i++) {
+    // Rewritten after staring at some jchris code for a while.
+    function binRows(rows, start, step, stop) {
+        var val = 0, vals = [];
+        var next = start.getTime() + step;
+        for (var i=0; i < rows.length; i++) {
             var rowTime = rows[i].key;
-            if (rowTime < start + step) {
+            if (rowTime > +stop) {
+                break;
+            }
+            if (rowTime < next) {
                 val += rows[i].value;
-            } else if (rowTime > start + step) {
-                vals.push(val);
-                gap = rowTime - start + step;
-                times = gap / step;
-                for (j=0; j < times; j++) {
-                    vals.push(NaN); // nothing for that bin
-                };
-                val = rows[i].value;
-                start += (step * (times+1));
             } else {
                 vals.push(val);
+                while (next + step < rowTime) {
+                    vals.push(NaN);
+                    next += step;
+                }
+                next += step;
                 val = rows[i].value;
-                start += step;
             }
         };
+        vals.push(val);
         return vals;
     }
 
