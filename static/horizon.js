@@ -1,18 +1,16 @@
 statRequestBase = "http://cbvis.west.spy.net/stats";
 
-function drawHorizon(here, clusterInfo, which, axified) {
+function drawHorizon(here, clusterInfo) {
 
     var context = cubism.context()
         .step(1e4)
         .size(1440);
 
-    if (axified) {
-        d3.select(here).selectAll(".axis")
-            .data([axified])
-            .enter().append("div")
-            .attr("class", function(d) { return d + " axis"; })
-            .each(function(d) { d3.select(this).call(context.axis().ticks(12).orient(d)); });
-    }
+    d3.select(here).selectAll(".axis")
+        .data(["top", "bottom"])
+      .enter().append("div")
+        .attr("class", function(d) { return d + " axis"; })
+        .each(function(d) { d3.select(this).call(context.axis().ticks(12).orient(d)); });
 
     d3.select(here).append("div")
         .attr("class", "rule")
@@ -23,10 +21,12 @@ function drawHorizon(here, clusterInfo, which, axified) {
     });
 
     updaters.push(function(data) {
-
         var nodes = [];
-        for (var k in data) {
-            nodes.push(k + " " + which);
+        var things = ["net", "mem", "items", "ops"];
+        for (var t = 0; t < things.length; t++) {
+            for (var k in data) {
+                nodes.push(k + " " + things[t]);
+            }
         }
 
         d3.select(here).selectAll(".horizon")

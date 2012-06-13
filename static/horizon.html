@@ -98,10 +98,7 @@ body {
     </style>
   </head>
   <body>
-    <div id="net"></div>
-    <div id="ram"></div>
-    <div id="ops"></div>
-    <div id="items"></div>
+    <div id="cubin"></div>
 
 <script type="text/javascript">
 var updaters = [];
@@ -125,10 +122,7 @@ var timestamps = [];
     update();
     setInterval(update, 1000);
 
-   drawHorizon("#net", clusterInfo, 'net', 'top');
-   drawHorizon("#ram", clusterInfo, 'mem');
-   drawHorizon("#ops", clusterInfo, 'ops');
-   drawHorizon("#items", clusterInfo, 'items');
+   drawHorizon("#cubin", clusterInfo);
  });
     </script>
   </body>
