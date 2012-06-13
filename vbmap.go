@@ -90,28 +90,16 @@ func displayMap(w http.ResponseWriter, req *http.Request, bucket *couchbase.Buck
 	commonSuffix := bucket.CommonAddressSuffix()
 	commonSuffixMC := couchbase.FindCommonSuffix(bucket.VBucketServerMap.ServerList)
 
-	req.ParseForm()
-	var_name := req.FormValue("name")
-
 	rv := map[string]interface{}{}
 	// rv["mc_vbmap"] = getVbMapsMC(bucket, commonSuffixMC)
 	rv["server_list"] = getShortServerList(bucket, commonSuffixMC)
 	rv["repmap"] = bucket.VBucketServerMap.VBucketMap
 	rv["server_states"] = getServerStates(bucket, commonSuffix)
 
-	if var_name != "" {
-		fmt.Fprintf(w, "var "+var_name+" = ")
-	}
-	json.NewEncoder(w).Encode(rv)
-	if var_name != "" {
-		fmt.Fprintf(w, ";")
-	}
+	sendJSON(w, req, rv)
 }
 
 func mapHandler(w http.ResponseWriter, req *http.Request) {
-	w.Header().Set("Content-type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-
 	bucket := getBucket(req)
 	if bucket == nil {
 		http.NotFound(w, req)
@@ -168,9 +156,6 @@ func getStats(bucket *couchbase.Bucket, commonSuffixMC string) map[string]map[st
 }
 
 func statsHandler(w http.ResponseWriter, req *http.Request) {
-	w.Header().Set("Content-type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-
 	bucket := getBucket(req)
 	if bucket == nil {
 		http.NotFound(w, req)
@@ -182,23 +167,10 @@ func statsHandler(w http.ResponseWriter, req *http.Request) {
 
 	rv := getStats(bucket, commonSuffixMC)
 
-	req.ParseForm()
-	var_name := req.FormValue("name")
-
-	if var_name != "" {
-		fmt.Fprintf(w, "var "+var_name+" = ")
-	}
-	err := json.NewEncoder(w).Encode(rv)
-	maybefatal(err, "Error encoding output: %v", err)
-	if var_name != "" {
-		fmt.Fprintf(w, ";")
-	}
+	sendJSON(w, req, rv)
 }
 
 func vbHandler(w http.ResponseWriter, req *http.Request) {
-	w.Header().Set("Content-type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-
 	bucket := getBucket(req)
 	defer bucket.Close()
 
@@ -206,17 +178,7 @@ func vbHandler(w http.ResponseWriter, req *http.Request) {
 
 	rv := getVbStats(bucket, commonSuffixMC)
 
-	req.ParseForm()
-	var_name := req.FormValue("name")
-
-	if var_name != "" {
-		fmt.Fprintf(w, "var "+var_name+" = ")
-	}
-	err := json.NewEncoder(w).Encode(rv)
-	maybefatal(err, "Error encoding output: %v", err)
-	if var_name != "" {
-		fmt.Fprintf(w, ";")
-	}
+	sendJSON(w, req, rv)
 }
 
 type handler func(http.ResponseWriter, *http.Request)
@@ -260,9 +222,6 @@ func replaymapHandler(w http.ResponseWriter, req *http.Request) {
 }
 
 func replayvbHandler(w http.ResponseWriter, req *http.Request) {
-	w.Header().Set("Content-type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-
 	re := currentState.current()
 
 	conv := map[string]map[string]string{}
@@ -279,23 +238,10 @@ func replayvbHandler(w http.ResponseWriter, req *http.Request) {
 
 	vbd := processVBDetails(conv, "")
 
-	req.ParseForm()
-	var_name := req.FormValue("name")
-
-	if var_name != "" {
-		fmt.Fprintf(w, "var "+var_name+" = ")
-	}
-	err := json.NewEncoder(w).Encode(vbd)
-	maybefatal(err, "Error encoding output: %v", err)
-	if var_name != "" {
-		fmt.Fprintf(w, ";")
-	}
+	sendJSON(w, req, vbd)
 }
 
 func replaystatsHandler(w http.ResponseWriter, req *http.Request) {
-	w.Header().Set("Content-type", "application/json")
-	w.Header().Set("Access-Control-Allow-Origin", "*")
-
 	re := currentState.current()
 
 	conv := map[string]map[string]string{}
@@ -310,13 +256,20 @@ func replaystatsHandler(w http.ResponseWriter, req *http.Request) {
 		}
 	}
 
+	sendJSON(w, req, conv)
+}
+
+func sendJSON(w http.ResponseWriter, req *http.Request, ob interface{}) {
+	w.Header().Set("Content-type", "application/json")
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+
 	req.ParseForm()
 	var_name := req.FormValue("name")
 
 	if var_name != "" {
 		fmt.Fprintf(w, "var "+var_name+" = ")
 	}
-	err := json.NewEncoder(w).Encode(conv)
+	err := json.NewEncoder(w).Encode(ob)
 	maybefatal(err, "Error encoding output: %v", err)
 	if var_name != "" {
 		fmt.Fprintf(w, ";")
