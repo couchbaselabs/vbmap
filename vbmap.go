@@ -1,10 +1,12 @@
 package main
 
 import (
+	"compress/gzip"
 	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
 	"strconv"
@@ -260,19 +262,30 @@ func replaystatsHandler(w http.ResponseWriter, req *http.Request) {
 }
 
 func sendJSON(w http.ResponseWriter, req *http.Request, ob interface{}) {
+	acceptable := req.Header.Get("accept-encoding")
+	z := strings.Contains(acceptable, "gzip")
+
+	var out io.Writer = w
+
 	w.Header().Set("Content-type", "application/json")
 	w.Header().Set("Access-Control-Allow-Origin", "*")
+	if z {
+		w.Header().Set("Content-Encoding", "gzip")
+		gz := gzip.NewWriter(w)
+		defer gz.Close()
+		out = gz
+	}
 
 	req.ParseForm()
 	var_name := req.FormValue("name")
 
 	if var_name != "" {
-		fmt.Fprintf(w, "var "+var_name+" = ")
+		fmt.Fprintf(out, "var "+var_name+" = ")
 	}
-	err := json.NewEncoder(w).Encode(ob)
+	err := json.NewEncoder(out).Encode(ob)
 	maybefatal(err, "Error encoding output: %v", err)
 	if var_name != "" {
-		fmt.Fprintf(w, ";")
+		fmt.Fprintf(out, ";")
 	}
 }
 
