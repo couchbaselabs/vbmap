@@ -3,7 +3,7 @@
 function drawHorizon(here, clusterInfo) {
 
     var context = cubism.context()
-        .step(1e4)
+        .step(1e4 * 5)
         .size(1440);
 
     d3.select(here).selectAll(".axis")
@@ -75,21 +75,24 @@ function drawHorizon(here, clusterInfo) {
     function sum(a) {
         var rv = 0;
         for(var i = 0; i < a.length; i++) {
-            rv += parseFloat(a[i]);
+            rv += a[i];
         }
         return rv;
     }
 
     function sumStats(nodeName, label, stats) {
-        var prev = 0;
+        var prev = NaN;
+        var prevA = [];
         return nodeData(nodeName, function(h) {
-            var vals = [];
-            for (var i = 0; i < stats.length; i++) {
-                vals.push(h[stats[i]]);
-            }
+            var vals = stats.map(function(s) { return parseFloat(h[s]); });
             var v = sum(vals);
-            var rv = v - prev;
+            var rv = Math.max(0, isNaN(prev) ? NaN : v - prev);
+            if (rv < 1 ) {
+                console.log("sum(", prevA, ") - sum(", vals, ") =",
+                            v, "-", prev, "=", rv);
+            }
             prev = v;
+            prev = vals;
             return rv;
         }, label);
     }
@@ -118,7 +121,7 @@ function drawHorizon(here, clusterInfo) {
                     val += parseFloat(h[k]);
                 }
             }
-            var rv = Math.max(0, isNaN(prev) ? NaN : val - prev);
+            var rv = isNaN(prev) ? NaN : val - prev;
             prev = val;
             return rv;
         }, label);
@@ -127,7 +130,7 @@ function drawHorizon(here, clusterInfo) {
     function nodeData(nodeName, extractf, label) {
         label = label || nodeName;
         return context.metric(function(start, stop, step, callback) {
-            console.log("Fetching data for", nodeName, "from", start, "to", stop);
+            // console.log("Fetching data for", nodeName, "from", start, "to", stop);
             var sti = 0;
             while (sti < timestamps.length && timestamps[sti] < +start) {
                 sti++;
@@ -145,12 +148,28 @@ function drawHorizon(here, clusterInfo) {
         }, label);
     }
 
+    function diffs(vals) {
+        if (vals.length < 2) {
+            return [NaN];
+        }
+        var rv = [vals[0]];
+        for (var i = 1; i < vals.length; i++) {
+            rv.push(vals[i] - vals[i-1]);
+        }
+        return rv;
+    }
+
     // Rewritten after staring at some jchris code for a while.
     function binRows(rows, start, step, stop) {
         var val = 0, vals = [];
+        function rt(k) {
+            //  0        1     2  3  4  5
+            // ["Scala", 2012, 6, 1, 8, 0]
+            return new Date(k[1], k[2] - 1, k[3], k[4] || 0, k[5] || 0).getTime();
+        }
         var next = start.getTime() + step;
         for (var i=0; i < rows.length; i++) {
-            var rowTime = rows[i].key;
+            var rowTime = rt(rows[i].key);
             if (rowTime > +stop) {
                 break;
             }
