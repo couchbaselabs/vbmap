@@ -81,6 +81,7 @@ func getBucket(req *http.Request) *couchbase.Bucket {
 		}
 	} else {
 		bucket, err = pool.GetBucket(bucketName)
+		maybefatal(err, "Error getting bucket: %v", err)
 	}
 
 	log.Printf("Got bucket %v from %v", bucketName, clusterurl)
