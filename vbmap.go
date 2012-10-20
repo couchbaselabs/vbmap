@@ -84,8 +84,6 @@ func getBucket(req *http.Request) *couchbase.Bucket {
 		maybefatal(err, "Error getting bucket: %v", err)
 	}
 
-	log.Printf("Got bucket %v from %v", bucketName, clusterurl)
-
 	return bucket
 }
 
@@ -105,7 +103,7 @@ func displayMap(w http.ResponseWriter, req *http.Request, bucket *couchbase.Buck
 func mapHandler(w http.ResponseWriter, req *http.Request) {
 	defer func() {
 		if x := recover(); x != nil {
-			log.Printf("panic: recovering from %v", x)
+			log.Printf("recovering from %v", x)
 		}
 	}()
 	bucket := getBucket(req)
@@ -166,7 +164,7 @@ func getStats(bucket *couchbase.Bucket, commonSuffixMC string) map[string]map[st
 func statsHandler(w http.ResponseWriter, req *http.Request) {
 	defer func() {
 		if x := recover(); x != nil {
-			log.Printf("panic: recovering from %v", x)
+			log.Printf("recovering from %v", x)
 		}
 	}()
 	bucket := getBucket(req)
@@ -186,7 +184,7 @@ func statsHandler(w http.ResponseWriter, req *http.Request) {
 func vbHandler(w http.ResponseWriter, req *http.Request) {
 	defer func() {
 		if x := recover(); x != nil {
-			log.Printf("panic: recovering from %v", x)
+			log.Printf("recovering from %v", x)
 		}
 	}()
 
