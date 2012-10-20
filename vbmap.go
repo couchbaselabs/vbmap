@@ -15,6 +15,8 @@ import (
 	"github.com/couchbaselabs/go-couchbase"
 )
 
+var verbose = flag.Bool("verbose", false, "Log panic captures")
+
 type vbmap map[string][]uint16
 
 func maybefatal(err error, f string, args ...interface{}) {
@@ -102,7 +104,7 @@ func displayMap(w http.ResponseWriter, req *http.Request, bucket *couchbase.Buck
 
 func mapHandler(w http.ResponseWriter, req *http.Request) {
 	defer func() {
-		if x := recover(); x != nil {
+		if x := recover(); x != nil && *verbose {
 			log.Printf("recovering from %v", x)
 		}
 	}()
@@ -163,7 +165,7 @@ func getStats(bucket *couchbase.Bucket, commonSuffixMC string) map[string]map[st
 
 func statsHandler(w http.ResponseWriter, req *http.Request) {
 	defer func() {
-		if x := recover(); x != nil {
+		if x := recover(); x != nil && *verbose {
 			log.Printf("recovering from %v", x)
 		}
 	}()
@@ -183,7 +185,7 @@ func statsHandler(w http.ResponseWriter, req *http.Request) {
 
 func vbHandler(w http.ResponseWriter, req *http.Request) {
 	defer func() {
-		if x := recover(); x != nil {
+		if x := recover(); x != nil && *verbose {
 			log.Printf("recovering from %v", x)
 		}
 	}()
