@@ -313,6 +313,8 @@ func main() {
 		"Provide a replay json.gz for /map and /vb")
 	replaySpeed := flag.Float64("replaySpeed", 1.0,
 		"Realtime multiplier for replay")
+	bindAddr := flag.String("bind", ":4444", "Address to bind to")
+
 	flag.Parse()
 
 	http.HandleFunc("/", files("text/html", "root.html"))
@@ -341,5 +343,5 @@ func main() {
 		http.HandleFunc("/stats", replaystatsHandler)
 	}
 
-	log.Fatal(http.ListenAndServe(":4444", nil))
+	log.Fatal(http.ListenAndServe(*bindAddr, nil))
 }
