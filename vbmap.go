@@ -46,7 +46,7 @@ func getVbMapsMC(bucket *couchbase.Bucket, commonSuffixMC string) map[string]vbm
 
 func getServerStates(bucket *couchbase.Bucket, commonSuffixMC string) map[string]string {
 	rv := make(map[string]string)
-	for _, node := range bucket.Nodes {
+	for _, node := range bucket.Nodes() {
 		rv[couchbase.CleanupHost(node.Hostname, commonSuffixMC)] = node.Status
 	}
 	return rv
@@ -54,7 +54,7 @@ func getServerStates(bucket *couchbase.Bucket, commonSuffixMC string) map[string
 
 func getShortServerList(bucket *couchbase.Bucket, commonSuffixMC string) []string {
 	rv := []string{}
-	for _, node := range bucket.VBucketServerMap.ServerList {
+	for _, node := range bucket.VBServerMap().ServerList {
 		rv = append(rv, couchbase.CleanupHost(node, commonSuffixMC))
 	}
 	return rv
@@ -91,12 +91,13 @@ func getBucket(req *http.Request) *couchbase.Bucket {
 
 func displayMap(w http.ResponseWriter, req *http.Request, bucket *couchbase.Bucket) {
 	commonSuffix := bucket.CommonAddressSuffix()
-	commonSuffixMC := couchbase.FindCommonSuffix(bucket.VBucketServerMap.ServerList)
+	vbm := bucket.VBServerMap()
+	commonSuffixMC := couchbase.FindCommonSuffix(vbm.ServerList)
 
 	rv := map[string]interface{}{}
 	// rv["mc_vbmap"] = getVbMapsMC(bucket, commonSuffixMC)
 	rv["server_list"] = getShortServerList(bucket, commonSuffixMC)
-	rv["repmap"] = bucket.VBucketServerMap.VBucketMap
+	rv["repmap"] = vbm.VBucketMap
 	rv["server_states"] = getServerStates(bucket, commonSuffix)
 
 	sendJSON(w, req, rv)
@@ -176,7 +177,7 @@ func statsHandler(w http.ResponseWriter, req *http.Request) {
 	}
 	defer bucket.Close()
 
-	commonSuffixMC := couchbase.FindCommonSuffix(bucket.VBucketServerMap.ServerList)
+	commonSuffixMC := couchbase.FindCommonSuffix(bucket.VBServerMap().ServerList)
 
 	rv := getStats(bucket, commonSuffixMC)
 
@@ -193,7 +194,7 @@ func vbHandler(w http.ResponseWriter, req *http.Request) {
 	bucket := getBucket(req)
 	defer bucket.Close()
 
-	commonSuffixMC := couchbase.FindCommonSuffix(bucket.VBucketServerMap.ServerList)
+	commonSuffixMC := couchbase.FindCommonSuffix(bucket.VBServerMap().ServerList)
 
 	rv := getVbStats(bucket, commonSuffixMC)
 
